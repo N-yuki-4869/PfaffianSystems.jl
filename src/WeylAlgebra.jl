@@ -78,29 +78,11 @@ function Base.:*(l::WAlgElem, r::WAlgElem)
     r_mons = r.elem |> monomials |> collect
     l_size = l_coeffs |> size
     r_size = r_coeffs |> size
-    l_coeff = []
-    for i in (1,l_size[1])
-        push!(l_coeff, l_coeffs[i])
-    end
-    l_mon = []
-    for i in (1,l_size[1])
-        push!(l_mon, l_mons[i])
-    end
-
-    r_size = r_coeffs |> size
-    r_coeff = []
-    for i in (1,r_size[1])
-        push!(r_coeff, r_coeffs[i])
-    end
-    r_mon = []
-    for i in (1,r_size[1])
-        push!(r_mon, r_mons[i])
-    end
 
     ret_dop = 0
     for i = 1:l_size[1]
         for j = 1:r_size[1]
-            ret_dop +=  l_coeff[i] * (r_coeff[j] * l_mon[i] + derivative(l_mon[i],1) * derivative(r_coeff[j], 1)) * r_mon[j]
+            ret_dop +=  l_coeffs[i] * _nth_derivative(l_mons[i],r_coeffs[j],degree(l_mons[i],gens(parent(l_mons[i]))[1]) ) * r_mons[j]
         end
     end
     return WAlgElem(ret_dop)
@@ -112,4 +94,23 @@ function Base.:^(x::WAlgElem, y::Integer)
         ret_dop *= x
     end
     return ret_dop
+end
+
+function _nth_derivative(l_mons,r_coeffs,n)
+    r_coeff = [r_coeffs]
+    r_mon = [1]
+    if l_mons == 1
+        return r_coeffs * l_mons
+    else
+        ret_dop = 0
+        for i=1:n
+            ret_dop = 0
+            for j=1:i
+                ret_dop += (r_coeff[j] * gens(parent(l_mons))[1] + derivative(r_coeff[j],1)) * r_mon[j]
+            end
+            r_coeff = collect(coefficients(ret_dop))
+            r_mon = collect(monomials(ret_dop))
+        end
+        return ret_dop
+    end
 end

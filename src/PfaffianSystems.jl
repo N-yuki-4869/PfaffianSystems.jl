@@ -18,7 +18,7 @@ using DataStructures: OrderedSet
 # export OrderedSet
 # using Symbolics: scalarize
 using Base: @invokelatest
-
+using AbstractAlgebra
 function Bijection{S, T}(dict::AbstractDict{S, T}) where S where T
 	return Bijection(dict)
 end
