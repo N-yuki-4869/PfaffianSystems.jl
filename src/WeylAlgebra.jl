@@ -4,6 +4,7 @@
 ################################
 
 using AbstractAlgebra
+import Base.==
 
 const AA = AbstractAlgebra
 
@@ -42,6 +43,7 @@ Base.:-(x::WAlgElem, y::WAlgElem) = WAlgElem(x.elem - y.elem)
 Base.one(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = WAlgElem(one(wae.elem))
 Base.zero(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = WAlgElem(zero(wae.elem))
 
+Base.:(==)(x::WAlgElem, y::WAlgElem) = x.elem == y.elem
 # TODO: multiplication of WAlgElem
 # TODO: multiplication of WAlgElem and constant
 # TODO: multiplication of WAlgElem and polynomial
@@ -66,8 +68,17 @@ function weyl_algebra(F::Field, s::Vector{Symbol}, ds::Vector{Symbol}; kw...)
 	(WeylAlgebra(D), WAlgElem.(D.(gens_R)), WAlgElem.(gens_D))
 end
 
+function weyl_algebra(F::Field, s::Symbol, ds::Symbol; kw...)
+    D, x, dx = weyl_algebra(F, [s], [ds]; kw...)
+    return D, x[1], dx[1]
+end
+
 function weyl_algebra(F::Field, s::AbstractVector{<:AbstractString}; kw...)
 	weyl_algebra(F, Symbol.(s), Symbol.("d".*s); kw...)
+end
+
+function weyl_algebra(F::Field, s::AbstractString; kw...)
+    weyl_algebra(F, Symbol(s), Symbol("d"*s); kw...)
 end
 
 function Base.:*(l::WAlgElem, r::WAlgElem)
@@ -106,7 +117,7 @@ function _nth_derivative(l_mons,r_coeffs,n)
         for i=1:n
             ret_dop = 0
             for j=1:i
-                ret_dop += (r_coeff[j] * gens(parent(l_mons))[1] + derivative(r_coeff[j],1)) * r_mon[j]
+                ret_dop += (r_coeff[j] * gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j]
             end
             r_coeff = collect(coefficients(ret_dop))
             r_mon = collect(monomials(ret_dop))

@@ -10,6 +10,7 @@ end
 using PfaffianSystems: makeTestVarsAndIdeal
 
 using Symbolics: @variables
+using AbstractAlgebra: QQ
 # @testset "AsirWrapper.jl" begin
 #     x, dx, var2do = genVars("x", 3)
 #     @variables y[1:2]::Rational
@@ -101,7 +102,7 @@ using Symbolics: @variables
 # end
 
 @testset "WeylAlgebra.jl" begin
-    D, x, dx = weyl_algebra(QQ, ["x"])
+    D, x, dx = weyl_algebra(QQ, "x")
     @test isequal(x*x, x^2)
     @test isequal(x*dx, x*dx)
     @test isequal(dx*x, x*dx+1)
@@ -142,9 +143,5 @@ using Symbolics: @variables
     @test isequal(x*dx^4, x*dx^4)
     @test isequal(dx*x^4, x^4*dx+4*x^3)
     @test isequal(dx*dx^4, dx^5)
-
-    @test isequa
-
-
 
 end
