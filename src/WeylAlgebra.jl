@@ -54,6 +54,16 @@ Base.:(==)(x::WAlgElem, y::WAlgElem) = x.elem == y.elem
 
 ############################################################
 # 
+# Arithemetic with Rationals and Integers
+#
+############################################################
+Base.:+(x::Union{Rational, Integer}, y::WAlgElem) = WAlgElem(x + y.elem)
+Base.:+(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(x.elem + y)
+Base.:*(x::Union{Rational, Integer}, y::WAlgElem) = WAlgElem(x * y.elem)
+Base.:*(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(x.elem * y)
+
+############################################################
+# 
 # weyl_algebra constructor
 # 
 ############################################################
