@@ -143,5 +143,6 @@ using AbstractAlgebra: QQ
     @test isequal(x*dx^4, x*dx^4)
     @test isequal(dx*x^4, x^4*dx+4*x^3)
     @test isequal(dx*dx^4, dx^5)
-
+    @test isequal(x*dx*x*dx, x^2*dx^2+x*dx)
+    @test isequal(((x^2+x+1)*dx^2+(x+1)*dx+x)*(x^2*dx+x), (x^4+x^3+x^2)*dx^3+(6*x^3+6*x^2+5*x)*dx^2+(x^3+7*x^2+7*x+4)*dx+x^2+x+1)
 end
