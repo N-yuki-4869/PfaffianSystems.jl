@@ -92,8 +92,7 @@ function weyl_algebra(F::Field, s::AbstractString; kw...)
 end
 
 function Base.:*(l::WAlgElem, r::WAlgElem)
-    # 以下，l = dx, r = x と仮定する
-    l_coeffs = l.elem |> coefficients |> collect
+    l_coeffs = l.elem |> coefficients |> collect                   
     l_mons = l.elem |> monomials |> collect 
     r_coeffs = r.elem |> coefficients |> collect    
     r_mons = r.elem |> monomials |> collect
@@ -120,18 +119,20 @@ end
 function _nth_derivative(l_mons,r_coeffs,n)
     r_coeff = [r_coeffs]
     r_mon = [1]
+    r_size = r_coeff |> size
     if l_mons == 1
         return r_coeffs * l_mons
     else
         ret_dop = 0
         for i=1:n
             ret_dop = 0
-            for j=1:i
-                ret_dop += (r_coeff[j] * gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j]
+            for j=1:r_size[1]
+                ret_dop += (r_coeff[j] * gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j] 
             end
             r_coeff = collect(coefficients(ret_dop))
             r_mon = collect(monomials(ret_dop))
-        end
+            r_size = r_coeff |> size
         return ret_dop
+        end
     end
 end
