@@ -3,9 +3,9 @@
 # 
 ################################
 
-using AbstractAlgebra
-import Base.==
+import Base: ==, parent
 
+using AbstractAlgebra
 const AA = AbstractAlgebra
 
 ############################################################
@@ -20,19 +20,33 @@ struct WeylAlgebra{T <: MPolyRing{<:MPolyRingElem}}
 	WAlg::T
 end
 
-function Base.show(io::IO, D::WeylAlgebra)
-	print(io, "WAlg(", D.WAlg, ")")
-end
-
 Base.one(D::WeylAlgebra) = WAlgElem(one(D.WAlg))
 Base.zero(D::WeylAlgebra) = WAlgElem(zero(D.WAlg))
+
+function gens(D::WeylAlgebra)
+    gens = D.WAlg |> base_ring |> AA.gens
+    gens = D.WAlg.(gens)
+    return WAlgElem.(gens)
+end
+dgens(D::WeylAlgebra) = D.WAlg |> AA.gens .|> WAlgElem
+
+nvars(D::WeylAlgebra) = D.WAlg |> AA.nvars
+
+# function Base.show(io::IO, D::WeylAlgebra)
+# 	print(io, "WAlg(", D.WAlg, ")")
+# end
+function Base.show(io::IO, D::WeylAlgebra)
+    print(io, nvars(D),"-dimensional Weyl algebra")
+end
 
 # TODO: wrapper for constant
 
 
-struct WAlgElem{T <: MPolyRingElem}
+struct WAlgElem{T <: MPolyRingElem{<:MPolyRingElem}}
 	elem::T
 end
+
+Base.parent(wae::WAlgElem) = WeylAlgebra(parent(wae.elem))
 
 function Base.show(io::IO, wae::WAlgElem)
 	print(io, wae.elem)
@@ -75,7 +89,9 @@ Base.:*(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(x.elem * y)
 function weyl_algebra(F::Field, s::Vector{Symbol}, ds::Vector{Symbol}; kw...)
 	R, gens_R = polynomial_ring(F, s; kw...)
 	D, gens_D = polynomial_ring(R, ds; kw...)
-	(WeylAlgebra(D), WAlgElem.(D.(gens_R)), WAlgElem.(gens_D))
+    gens_R = D.(gens_R)
+    D = WeylAlgebra(D)
+	(D, WAlgElem.(gens_R), WAlgElem.(gens_D))
 end
 
 function weyl_algebra(F::Field, s::Symbol, ds::Symbol; kw...)
