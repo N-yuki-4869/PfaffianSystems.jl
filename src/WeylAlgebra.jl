@@ -47,6 +47,8 @@ struct WAlgElem{T <: MPolyRingElem{<:MPolyRingElem}}
 end
 
 Base.parent(wae::WAlgElem) = WeylAlgebra(parent(wae.elem))
+gens(wae::WAlgElem) = gens(parent(wae))
+dgens(wae::WAlgElem) = dgens(parent(wae))
 
 function Base.show(io::IO, wae::WAlgElem)
 	print(io, wae.elem)
