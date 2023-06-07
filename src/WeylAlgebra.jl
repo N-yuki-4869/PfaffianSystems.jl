@@ -120,7 +120,7 @@ function Base.:*(l::WAlgElem, r::WAlgElem)
     ret_dop = 0
     for i = 1:l_size[1]
         for j = 1:r_size[1]
-            ret_dop +=  l_coeffs[i] * _nth_derivative(l_mons[i],r_coeffs[j],degree(l_mons[i],gens(parent(l_mons[i]))[1]) ) * r_mons[j]
+            ret_dop +=  l_coeffs[i] * Leibniz_rule(l_mons[i],r_coeffs[j]) * r_mons[j]
         end
     end
     return WAlgElem(ret_dop)
@@ -134,7 +134,35 @@ function Base.:^(x::WAlgElem, y::Integer)
     return ret_dop
 end
 
-function _nth_derivative(l_mons,r_coeffs,n)
+function _nth_derivative(f,x,n)
+    if n==0
+        return f
+    else
+        for i=1:n
+            f = AA.derivative(f,x)
+        end
+        return f
+    end
+end
+
+function Leibniz_rule(l_mons,r_coeffs)
+    ret_dop = 0
+    k = 0
+    while true
+        a = _nth_derivative(r_coeffs,AA.gens(parent(r_coeffs))[1],k) * _nth_derivative(l_mons,AA.gens(parent(l_mons))[1],k) / parent(r_coeffs)(factorial(k))
+        a == 0 && break
+        ret_dop += a
+        k += 1
+    end
+    return ret_dop
+end
+
+
+
+
+
+
+function derivative_roop(l_mons,r_coeffs,n)
     r_coeff = [r_coeffs]
     r_mon = [1]
     r_size = r_coeff |> size
@@ -145,7 +173,7 @@ function _nth_derivative(l_mons,r_coeffs,n)
         for i=1:n
             ret_dop = 0
             for j=1:r_size[1]
-                ret_dop += (r_coeff[j] * gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j] 
+                ret_dop += (r_coeff[j] * AA.gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j] 
             end
             r_coeff = collect(coefficients(ret_dop))
             r_mon = collect(monomials(ret_dop))
