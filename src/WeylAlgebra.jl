@@ -69,7 +69,7 @@ function Base.:*(l::WAlgElem, r::WAlgElem)
     ret_dop = 0
     for i = 1:l_size[1]
         for j = 1:r_size[1]
-            ret_dop +=  l_coeffs[i] * _nth_derivative(l_mons[i],r_coeffs[j],AA.degree(l_mons[i],AA.gens(parent(l_mons[i]))[1]) ) * r_mons[j]
+            ret_dop +=  l_coeffs[i] * Leibniz_rule_2(l_mons[i],r_coeffs[j]) * r_mons[j]
         end
     end
     return WAlgElem(ret_dop)
@@ -83,26 +83,78 @@ function Base.:^(x::WAlgElem, y::Integer)
     return ret_dop
 end
 
-function _nth_derivative(l_mons,r_coeffs,n)
-    r_coeff = [r_coeffs]
-    r_mon = [1]
-    r_size = r_coeff |> size
-    if l_mons == 1
-        return r_coeffs * l_mons
+function _nth_derivative(f,x,n)
+    if n==0
+        return f
     else
-        ret_dop = 0
         for i=1:n
-            ret_dop = 0
-            for j=1:r_size[1]
-                ret_dop += (r_coeff[j] * AA.gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j] 
-            end
-            r_coeff = collect(AA.coefficients(ret_dop))
-            r_mon = collect(AA.monomials(ret_dop))
-            r_size = r_coeff |> size
-        return ret_dop
+            f = AA.derivative(f,x)
         end
+        return f
     end
 end
+
+
+function Leibniz_rule(l_mons,r_coeffs)
+    ret_dop = 0
+    k = 0
+    while true
+        a = _nth_derivative(r_coeffs,AA.gens(parent(r_coeffs))[i],k) * _nth_derivative(l_mons,AA.gens(parent(l_mons))[i],k) * parent(r_coeffs)(factorial(k))
+        a == 0&&break
+        ret_dop += a
+        k += 1
+
+    end
+end
+
+
+function Leibniz_rule_2(l_mons,r_coeffs)
+    ret_dop = 0
+    a = l_mons
+    b = r_coeffs
+    c = 1
+    k = [0 for _=1:size(AA.gens(parent(l_mons)))[1]]
+    for l=1:size(k)[1]
+        for j=1:size(k)[1]+1
+            for i=1:size(AA.gens(parent(l_mons)))[1]
+                @show b, AA.gens(parent(r_coeffs))[i], k[i]
+                b = _nth_derivative(b,AA.gens(parent(r_coeffs))[i],k[i])
+                a = _nth_derivative(a,AA.gens(parent(l_mons))[i],k[i])
+                c *= parent(r_coeffs)(factorial(k[i]))
+                @show a
+            end
+            d = b * a * c
+            ret_dop += d
+            k[l] += 1
+        end
+    end
+
+    return ret_dop
+end
+
+
+
+# function derivative_roop(l_mons,r_coeffs,n)
+#     r_coeff = [r_coeffs]
+#     r_mon = [1]
+#     r_size = r_coeff |> size
+#     if l_mons == 1
+#         return r_coeffs * l_mons
+#     else
+#         ret_dop = 0
+#         for i=1:n
+#             ret_dop = 0
+#             for j=1:r_size[1]
+#                 ret_dop += (r_coeff[j] * AA.gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j] 
+#             end
+#             r_coeff = collect(coefficients(ret_dop))
+#             r_mon = collect(monomials(ret_dop))
+#             r_size = r_coeff |> size
+#         return ret_dop
+#         end
+#     end
+# end
+
 
 # TODO: multiplication of WAlgElem and constant
 # TODO: multiplication of WAlgElem and polynomial
@@ -154,6 +206,9 @@ function weyl_algebra(F::Field, s::AbstractString; kw...)
 end
 weyl_algebra(s::AbstractString; kw...) = weyl_algebra(QQ, s; kw...)
 
+
+
+
 ############################################################
 # 
 # Ideal of Weyl algebra
@@ -172,3 +227,9 @@ struct Ideal{T <: AbstractDiffOp}
         new{T}(gens, par)
     end
 end
+
+
+
+
+
+
