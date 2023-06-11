@@ -1,12 +1,9 @@
-########## References ##########
-# GenericTypes.jl: https://github.com/Nemocas/AbstractAlgebra.jl/blob/597ce2fc0006a3ecdc24da2c63fc47ae0e98b7e6/src/generic/GenericTypes.jl
-# 
-################################
-
 import Base: ==, parent
 
 using AbstractAlgebra
 const AA = AbstractAlgebra
+
+abstract type AbstractDiffOp end
 
 ############################################################
 # 
@@ -42,7 +39,7 @@ end
 # TODO: wrapper for constant
 
 
-struct WAlgElem{T <: MPolyRingElem{<:MPolyRingElem}}
+struct WAlgElem{T <: MPolyRingElem{<:MPolyRingElem}} <: AbstractDiffOp
 	elem::T
 end
 
@@ -60,7 +57,54 @@ Base.one(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = 
 Base.zero(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = WAlgElem(zero(wae.elem))
 
 Base.:(==)(x::WAlgElem, y::WAlgElem) = x.elem == y.elem
+
 # TODO: multiplication of WAlgElem
+function Base.:*(l::WAlgElem, r::WAlgElem)
+    l_coeffs = l.elem |> coefficients |> collect                   
+    l_mons = l.elem |> monomials |> collect 
+    r_coeffs = r.elem |> coefficients |> collect    
+    r_mons = r.elem |> monomials |> collect
+    l_size = l_coeffs |> size
+    r_size = r_coeffs |> size
+
+    ret_dop = 0
+    for i = 1:l_size[1]
+        for j = 1:r_size[1]
+            ret_dop +=  l_coeffs[i] * _nth_derivative(l_mons[i],r_coeffs[j],degree(l_mons[i],gens(parent(l_mons[i]))[1]) ) * r_mons[j]
+        end
+    end
+    return WAlgElem(ret_dop)
+end
+
+function Base.:^(x::WAlgElem, y::Integer)
+    ret_dop = x
+    for _ = 1:y-1
+        ret_dop *= x
+    end
+    return ret_dop
+end
+
+function _nth_derivative(l_mons,r_coeffs,n)
+    r_coeff = [r_coeffs]
+    r_mon = [1]
+    r_size = r_coeff |> size
+    if l_mons == 1
+        return r_coeffs * l_mons
+    else
+        ret_dop = 0
+        for i=1:n
+            ret_dop = 0
+            for j=1:r_size[1]
+                ret_dop += (r_coeff[j] * gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j] 
+            end
+            r_coeff = collect(coefficients(ret_dop))
+            r_mon = collect(monomials(ret_dop))
+            r_size = r_coeff |> size
+        return ret_dop
+        end
+    end
+end
+
 # TODO: multiplication of WAlgElem and constant
 # TODO: multiplication of WAlgElem and polynomial
 
@@ -109,14 +153,13 @@ function weyl_algebra(F::Field, s::AbstractString; kw...)
     weyl_algebra(F, Symbol(s), Symbol("d"*s); kw...)
 end
 
-function Base.:*(l::WAlgElem, r::WAlgElem)
-    l_coeffs = l.elem |> coefficients |> collect                   
-    l_mons = l.elem |> monomials |> collect 
-    r_coeffs = r.elem |> coefficients |> collect    
-    r_mons = r.elem |> monomials |> collect
-    l_size = l_coeffs |> size
-    r_size = r_coeffs |> size
+############################################################
+# 
+# Ideal of Weyl algebra
+# 
+############################################################
 
+<<<<<<< HEAD
     ret_dop = 0
     for i = 1:l_size[1]
         for j = 1:r_size[1]
@@ -177,8 +220,20 @@ function Leibniz_rule_2(l_mons,r_coeffs)
             d = b * a * c
             ret_dop += d
             k[l] += 1
+=======
+struct Ideal{T <: AbstractDiffOp}
+    gens::Vector{T}
+    parent::WeylAlgebra
+
+    function Ideal(gens::Vector{T}) where T <: AbstractDiffOp
+        par = parent(gens[1])
+        if !all([par == parent(g) for g in gens])
+            error("All generators must be elements of the same Weyl algebra")
+>>>>>>> dev
         end
+        new{T}(gens, par)
     end
+<<<<<<< HEAD
 
     return ret_dop
 end
@@ -217,3 +272,6 @@ end
 #         end
 #     end
 # end
+=======
+end
+>>>>>>> dev
