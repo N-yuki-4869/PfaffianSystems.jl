@@ -19,12 +19,15 @@ using DataStructures: OrderedSet
 # using Symbolics: scalarize
 using Base: @invokelatest
 using AbstractAlgebra
+const AA = AbstractAlgebra
 function Bijection{S, T}(dict::AbstractDict{S, T}) where S where T
 	return Bijection(dict)
 end
 
 sort(v::Vector{Num}) = v[sortperm(string.(v))]
 export sort
+
+abstract type AbstractDiffOp end
 
 include("AsirWrapper.jl")
 export isAsirAvailable, vec2str, asir_derivative, asir_reduce, asir_fctr
@@ -41,5 +44,8 @@ export PfaffianSystem, get_vars, get_dvars, buildFuncA, integratePf, applyStdMon
 
 include("WeylAlgebra.jl")
 export weyl_algebra, Ideal
+
+include("DiffOpRings.jl")
+export diff_op_ring
 
 end

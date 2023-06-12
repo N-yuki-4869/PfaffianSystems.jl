@@ -2,8 +2,6 @@ import Base: ==, parent
 
 const AA = AbstractAlgebra
 
-abstract type AbstractDiffOp end
-
 ############################################################
 # 
 #	WeylAlgebra / WAlgElem 
