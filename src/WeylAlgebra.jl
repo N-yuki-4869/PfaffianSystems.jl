@@ -1,6 +1,5 @@
 import Base: ==, parent
 
-using AbstractAlgebra
 const AA = AbstractAlgebra
 
 abstract type AbstractDiffOp end
@@ -60,17 +59,17 @@ Base.:(==)(x::WAlgElem, y::WAlgElem) = x.elem == y.elem
 
 # TODO: multiplication of WAlgElem
 function Base.:*(l::WAlgElem, r::WAlgElem)
-    l_coeffs = l.elem |> coefficients |> collect                   
-    l_mons = l.elem |> monomials |> collect 
-    r_coeffs = r.elem |> coefficients |> collect    
-    r_mons = r.elem |> monomials |> collect
+    l_coeffs = l.elem |> AA.coefficients |> collect                   
+    l_mons = l.elem |> AA.monomials |> collect 
+    r_coeffs = r.elem |> AA.coefficients |> collect    
+    r_mons = r.elem |> AA.monomials |> collect
     l_size = l_coeffs |> size
     r_size = r_coeffs |> size
 
     ret_dop = 0
     for i = 1:l_size[1]
         for j = 1:r_size[1]
-            ret_dop +=  l_coeffs[i] * _nth_derivative(l_mons[i],r_coeffs[j],degree(l_mons[i],gens(parent(l_mons[i]))[1]) ) * r_mons[j]
+            ret_dop +=  l_coeffs[i] * _nth_derivative(l_mons[i],r_coeffs[j],AA.degree(l_mons[i],AA.gens(parent(l_mons[i]))[1]) ) * r_mons[j]
         end
     end
     return WAlgElem(ret_dop)
@@ -95,10 +94,10 @@ function _nth_derivative(l_mons,r_coeffs,n)
         for i=1:n
             ret_dop = 0
             for j=1:r_size[1]
-                ret_dop += (r_coeff[j] * gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j] 
+                ret_dop += (r_coeff[j] * AA.gens(parent(l_mons))[1] + AA.derivative(r_coeff[j],1)) * r_mon[j] 
             end
-            r_coeff = collect(coefficients(ret_dop))
-            r_mon = collect(monomials(ret_dop))
+            r_coeff = collect(AA.coefficients(ret_dop))
+            r_mon = collect(AA.monomials(ret_dop))
             r_size = r_coeff |> size
         return ret_dop
         end
@@ -148,10 +147,12 @@ end
 function weyl_algebra(F::Field, s::AbstractVector{<:AbstractString}; kw...)
 	weyl_algebra(F, Symbol.(s), Symbol.("d".*s); kw...)
 end
+weyl_algebra(s::AbstractVector{<:AbstractString}; kw...) = weyl_algebra(QQ, s; kw...)
 
 function weyl_algebra(F::Field, s::AbstractString; kw...)
     weyl_algebra(F, Symbol(s), Symbol("d"*s); kw...)
 end
+weyl_algebra(s::AbstractString; kw...) = weyl_algebra(QQ, s; kw...)
 
 ############################################################
 # 

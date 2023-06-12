@@ -18,7 +18,7 @@ using DataStructures: OrderedSet
 # export OrderedSet
 # using Symbolics: scalarize
 using Base: @invokelatest
-using AbstractAlgebra: coefficients, monomials, degree
+using AbstractAlgebra
 function Bijection{S, T}(dict::AbstractDict{S, T}) where S where T
 	return Bijection(dict)
 end
@@ -40,6 +40,6 @@ include("PfaffSys.jl")
 export PfaffianSystem, get_vars, get_dvars, buildFuncA, integratePf, applyStdMons, denomLCM
 
 include("WeylAlgebra.jl")
-export weyl_algebra
+export weyl_algebra, Ideal
 
 end
