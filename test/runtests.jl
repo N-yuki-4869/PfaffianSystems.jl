@@ -102,7 +102,7 @@ using AbstractAlgebra: QQ
 # end
 
 @testset "WeylAlgebra.jl" begin
-    D, x, dx = weyl_algebra(QQ, "x")
+    D, x, dx = weyl_algebra("x")
     @test isequal(x*x, x^2)
     @test isequal(x*dx, x*dx)
     @test isequal(dx*x, x*dx+1)
@@ -145,4 +145,35 @@ using AbstractAlgebra: QQ
     @test isequal(dx*dx^4, dx^5)
     @test isequal(x*dx*x*dx, x^2*dx^2+x*dx)
     @test isequal(((x^2+x+1)*dx^2+(x+1)*dx+x)*(x^2*dx+x), (x^4+x^3+x^2)*dx^3+(6*x^3+6*x^2+5*x)*dx^2+(x^3+7*x^2+7*x+4)*dx+x^2+x+1)
+end
+
+@testset "WeylAlgebra.jl" begin
+    D, (x,y), (dx,dy) = weyl_algebra(["x","y"])
+    @test isequal(x*dx, x*dx)
+    @test isequal(y*dy, y*dy)
+    @test isequal(dx*x, x*dx+1)
+    @test isequal(dy*y, y*dy+1)
+    @test isequal(dx*x*y, x*y*dx+y)
+    @test isequal(dx*dy*x, x*dx*dy+dy)
+    @test isequal(dx*dy*y, y*dx*dy+dx)
+    @test isequal(dy*x*y, x*y*dy+x)
+    @test isequal(dx*dy*x*y, x*y*dx*dy+x*dx+y*dy+1)
+    @test isequal(dx^2*dy*x*y, x*y*dx^2*dy+x*dx^2+2*y*dx*dy+2*dx)
+    @test isequal(dx*dy^2*x*y, x*y*dx*dy^2+2*x*dx*dy+y*dy^2+2*dy)
+    @test isequal(dx*dy*x^2*y, x^2*y*dx*dy+x^2*dx+2*x*y*dy+2*x)
+    @test isequal(dx*dy*x*y^2, x*y^2*dx*dy+2*x*y*dx+y^2*dy+2*y)
+    @test isequal(dx^2*dy^2*x*y, x*y*dx^2*dy^2+2*x*dx^2*dy+2*y*dx*dy^2+4*dx*dy)
+    @test isequal(dx^2*dy*x^2*y, x^2*y*dx^2*dy+x^2*dx^2+4*x*y*dx*dy+4*x*dx+2*y*dy+2)
+    @test isequal(dx^2*dy*x*y^2, x*y^2*dx^2*dy+2*x*y*dx^2+2*y^2*dx*dy+4*y*dx)
+    @test isequal(dx*dy^2*x^2*y, x^2*y*dx*dy^2+2*x^2*dx*dy+2*x*y*dy^2+4*x*dy)
+    @test isequal(dx*dy^2*x*y^2, x*y^2*dx*dy^2+4*x*y*dx*dy+2*x*dx+y^2*dy^2+4*y*dy+2)
+    @test isequal(dx*dy*x^2*y^2, x^2*y^2*dx*dy+2*x^2*y*dx+2*x*y^2*dy+4*x*y)
+    @test isequal(dx^2*dy^2*x^2*y^2, x^2*y^2*dx^2*dy^2+4*x^2*y*dx^2*dy+2*x^2*dx^2+4*x*y^2*dx*dy^2+16*x*y*dx*dy+8*x*dx+2*y^2*dy^2+8*y*dy+4)
+    @test isequal(x*y*dx*dy*x*y*dx*dy, x^2*y^2*dx^2*dy^2+x^2*y*dx^2*dy+x*y^2*dx*dy^2+x*y*dx*dy)
+    @test isequal(((x+y+1)*dx^2*dy+(x+y)*dx*dy)*((x^2+y)*dx*dy^2), (x^3+x^2*y+x^2+x*y+y^2+y)dx^3*dy^3+(x+y+1)*dx^3*dy^2+(x^3+x^2*y+4*x^2+5*x*y+4*x+y^2)*dx^2*dy^3+(x+y)*dx^2*dy^2+(2x^2+2*x*y+2*x+2*y+2)*dx*dy^3)
+end
+
+@testset "WeylAlgebra.jl" begin
+    D, (x,y,z), (dx,dy,dz) = weyl_algebra(["x","y","z"])
+    @test isequal(dx*dy*dz*x*y*z, x*y*z*dx*dy*dz+x*y*dx*dy+x*z*dx*dz+y*z*dy*dz+x*dx+y*dy+z*dz+1)
 end
