@@ -69,7 +69,7 @@ function Base.:*(l::WAlgElem, r::WAlgElem)
     ret_dop = 0
     for i = 1:l_size[1]
         for j = 1:r_size[1]
-            ret_dop +=  l_coeffs[i] * Leibniz_rule_2(l_mons[i],r_coeffs[j]) * r_mons[j]
+            ret_dop +=  l_coeffs[i] * Leibniz_rule(l_mons[i],r_coeffs[j]) * r_mons[j]
         end
     end
     return WAlgElem(ret_dop)
@@ -96,39 +96,29 @@ end
 
 
 function Leibniz_rule(l_mons,r_coeffs)
-    ret_dop = 0
-    k = 0
-    while true
-        a = _nth_derivative(r_coeffs,AA.gens(parent(r_coeffs))[i],k) * _nth_derivative(l_mons,AA.gens(parent(l_mons))[i],k) * parent(r_coeffs)(factorial(k))
-        a == 0&&break
-        ret_dop += a
-        k += 1
-
+    ret_dop = r_coeffs * l_mons
+    variable = size(AA.gens(parent(l_mons)))[1]
+    for i=1:variable
+        coeffs = collect(AA.coefficients(ret_dop))
+        mons = collect(AA.monomials(ret_dop))
+        coeffs_size = size(coeffs)[1]
+        for j=1:coeffs_size
+            ret_dop += Leibniz_rule_1(mons[j],coeffs[j],i)
+        end
     end
+    return ret_dop
 end
 
 
-function Leibniz_rule_2(l_mons,r_coeffs)
+function Leibniz_rule_1(l_mons,r_coeffs,i)
     ret_dop = 0
-    a = l_mons
-    b = r_coeffs
-    c = 1
-    k = [0 for _=1:size(AA.gens(parent(l_mons)))[1]]
-    for l=1:size(k)[1]
-        for j=1:size(k)[1]+1
-            for i=1:size(AA.gens(parent(l_mons)))[1]
-                @show b, AA.gens(parent(r_coeffs))[i], k[i]
-                b = _nth_derivative(b,AA.gens(parent(r_coeffs))[i],k[i])
-                a = _nth_derivative(a,AA.gens(parent(l_mons))[i],k[i])
-                c *= parent(r_coeffs)(factorial(k[i]))
-                @show a
-            end
-            d = b * a * c
-            ret_dop += d
-            k[l] += 1
-        end
+    k = 1
+    while true
+        a = _nth_derivative(r_coeffs,AA.gens(parent(r_coeffs))[i],k) * _nth_derivative(l_mons, AA.gens(parent(l_mons))[i],k) / parent(r_coeffs)(factorial(big(k)))
+        a == 0&&break
+        ret_dop += a
+        k += 1
     end
-
     return ret_dop
 end
 
