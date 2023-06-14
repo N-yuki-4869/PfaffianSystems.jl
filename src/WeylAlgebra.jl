@@ -1,7 +1,5 @@
 import Base: ==, parent
 
-const AA = AbstractAlgebra
-
 ############################################################
 # 
 #	WeylAlgebra / WAlgElem 
