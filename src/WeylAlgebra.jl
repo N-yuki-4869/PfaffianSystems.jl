@@ -142,6 +142,25 @@ end
 # end
 
 
+function Base.:/(x::WAlgElem,y::WAlgElem)
+    ret_dop = 0
+    x_coeff = x.elem |> AA.coefficients |> collect                   
+    x_mon = x.elem |> AA.monomials |> collect 
+    y_coeff = y.elem |> AA.coefficients |> collect    
+    y_mon = y.elem |> AA.monomials |> collect
+    if size(y_mon)[1] !== 1
+        return "Error"
+    else
+        for i=1:size(x_coeff)[1]
+            ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]
+        end
+    end
+
+    return WAlgElem(ret_dop)
+end
+
+
+
 # TODO: multiplication of WAlgElem and constant
 # TODO: multiplication of WAlgElem and polynomial
 
