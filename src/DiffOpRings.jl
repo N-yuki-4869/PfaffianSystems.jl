@@ -77,7 +77,7 @@ function Base.:^(x::DORElem, y::Integer)
     return ret_dop
 end
 
-function _nth_derivative(f,x,n)
+function _nth_derivative(f::T ,x::T ,n::Integer) where T
     if n==0
         return f
     else
@@ -91,7 +91,7 @@ end
 function rational_derivative(f,x)
 end
 
-function Leibniz_rule(l_mons,r_coeffs)
+function Leibniz_rule(l_mons::T ,r_coeffs::U) where {T <: MPolyRingElem{<:RatFuncElem}, U <: RatFuncElem}
     ret_dop = r_coeffs * l_mons
     variable = size(AA.gens(parent(l_mons)))[1]
     for i=1:variable
@@ -106,7 +106,7 @@ function Leibniz_rule(l_mons,r_coeffs)
 end
 
 
-function Leibniz_rule_1(l_mons,r_coeffs,i)
+function Leibniz_rule_1(l_mons::T ,r_coeffs:: U, i::Integer) where {T <: MPolyRingElem{<:RatFuncElem}, U <: RatFuncElem}
     ret_dop = 0
     k = 1
     while true

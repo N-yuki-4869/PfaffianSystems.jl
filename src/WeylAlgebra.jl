@@ -79,7 +79,7 @@ function Base.:^(x::WAlgElem, y::Integer)
     return ret_dop
 end
 
-function _nth_derivative(f,x,n)
+function _nth_derivative(f::T, x::T ,n::Integer) where T
     if n==0
         return f
     else
@@ -91,7 +91,7 @@ function _nth_derivative(f,x,n)
 end
 
 
-function Leibniz_rule(l_mons,r_coeffs)
+function Leibniz_rule(l_mons::T, r_coeffs::U) where {T <: MPolyRingElem{<:MPolyRingElem}, U <: MPolyRingElem}
     ret_dop = r_coeffs * l_mons
     variable = size(AA.gens(parent(l_mons)))[1]
     for i=1:variable
@@ -106,12 +106,12 @@ function Leibniz_rule(l_mons,r_coeffs)
 end
 
 
-function Leibniz_rule_1(l_mons,r_coeffs,i)
+function Leibniz_rule_1(l_mons::T ,r_coeffs::U, i::Integer) where {T <: MPolyRingElem{<:MPolyRingElem}, U <: MPolyRingElem}
     ret_dop = 0
     k = 1
     while true
         a = _nth_derivative(r_coeffs,AA.gens(parent(r_coeffs))[i],k) * _nth_derivative(l_mons, AA.gens(parent(l_mons))[i],k) / parent(r_coeffs)(factorial(big(k)))
-        a == 0&&break
+        a == 0 && break
         ret_dop += a
         k += 1
     end
@@ -142,22 +142,23 @@ end
 # end
 
 
-function Base.:/(x::WAlgElem,y::WAlgElem)
-    ret_dop = 0
-    x_coeff = x.elem |> AA.coefficients |> collect                   
-    x_mon = x.elem |> AA.monomials |> collect 
-    y_coeff = y.elem |> AA.coefficients |> collect    
-    y_mon = y.elem |> AA.monomials |> collect
-    if size(y_mon)[1] !== 1
-        return "Error"
-    else
-        for i=1:size(x_coeff)[1]
-            ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]
-        end
-    end
+# 多項式係数微分作用素に対して割り算を定義してはいけない
+# function Base.:/(x::WAlgElem,y::WAlgElem)
+#     ret_dop = 0
+#     x_coeff = x.elem |> AA.coefficients |> collect                   
+#     x_mon = x.elem |> AA.monomials |> collect 
+#     y_coeff = y.elem |> AA.coefficients |> collect    
+#     y_mon = y.elem |> AA.monomials |> collect
+#     if size(y_mon)[1] !== 1
+#         return "Error"
+#     else
+#         for i=1:size(x_coeff)[1]
+#             ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]
+#         end
+#     end
 
-    return WAlgElem(ret_dop)
-end
+#     return WAlgElem(ret_dop)
+# end
 
 
 
