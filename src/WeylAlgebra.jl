@@ -55,18 +55,25 @@ Base.:(==)(x::WAlgElem, y::WAlgElem) = x.elem == y.elem
 
 # TODO: multiplication of WAlgElem
 function Base.:*(l::WAlgElem, r::WAlgElem)
-    l_coeffs = l.elem |> AA.coefficients |> collect                   
-    l_mons = l.elem |> AA.monomials |> collect 
-    r_coeffs = r.elem |> AA.coefficients |> collect    
-    r_mons = r.elem |> AA.monomials |> collect
-    l_size = l_coeffs |> size
-    r_size = r_coeffs |> size
+    # l_coeffs = l.elem |> AA.coefficients |> collect                   
+    # l_mons = l.elem |> AA.monomials |> collect 
+    # r_coeffs = r.elem |> AA.coefficients |> collect    
+    # r_mons = r.elem |> AA.monomials |> collect
+    l_coeffs = AA.coefficients(l.elem)
+    l_mons = AA.monomials(l.elem) 
+    r_coeffs = AA.coefficients(r.elem)
+    r_mons = AA.monomials(r.elem)
+    # l_size = l_coeffs |> size
+    # r_size = r_coeffs |> size
 
     ret_dop = 0
-    for i = 1:l_size[1]
-        for j = 1:r_size[1]
-            ret_dop +=  l_coeffs[i] * Leibniz_rule(l_mons[i],r_coeffs[j]) * r_mons[j]
-        end
+    # for i = 1:l_size[1]
+    #     for j = 1:r_size[1]
+    #         ret_dop +=  l_coeffs[i] * Leibniz_rule(l_mons[i],r_coeffs[j]) * r_mons[j]
+    #     end
+    # end
+    for (lc, lm) in zip(l_coeffs, l_mons), (rc, rm) in zip(r_coeffs, r_mons) 
+        ret_dop +=  lc * Leibniz_rule(lm, rc) * rm
     end
     return WAlgElem(ret_dop)
 end
@@ -80,27 +87,34 @@ function Base.:^(x::WAlgElem, y::Integer)
 end
 
 function _nth_derivative(f::T, x::T ,n::Integer) where T
-    if n==0
-        return f
-    else
-        for i=1:n
-            f = AA.derivative(f,x)
-        end
-        return f
+    n == 0 && return f 
+    # if n==0
+    #     return f
+    # else
+    for i=1:n
+        f = AA.derivative(f,x)
     end
+    return f
+    # end
 end
 
 
 function Leibniz_rule(l_mons::T, r_coeffs::U) where {T <: MPolyRingElem{<:MPolyRingElem}, U <: MPolyRingElem}
     ret_dop = r_coeffs * l_mons
-    variable = size(AA.gens(parent(l_mons)))[1]
-    for i=1:variable
-        coeffs = collect(AA.coefficients(ret_dop))
-        mons = collect(AA.monomials(ret_dop))
-        coeffs_size = size(coeffs)[1]
-        for j=1:coeffs_size
-            ret_dop += Leibniz_rule_1(mons[j],coeffs[j],i)
-        end
+    # variable = size(AA.gens(parent(l_mons)))[1]
+    n = AA.nvars(parent(l_mons))
+    # for i=1:n
+        # coeffs = collect(AA.coefficients(ret_dop))
+        # mons = collect(AA.monomials(ret_dop))
+        # coeffs_size = size(coeffs)[1]
+        # @show coeffs, mons
+        # for j=1:coeffs_size
+            # @show mons[j], coeffs[j], i
+            # ret_dop += Leibniz_rule_1(mons[j],coeffs[j],i)
+            # @show m, c, i
+    # end
+    for i=1:n, (m, c) in zip(AA.monomials(ret_dop), AA.coefficients(ret_dop))
+        ret_dop += Leibniz_rule_1(m,c,i)
     end
     return ret_dop
 end
@@ -109,8 +123,11 @@ end
 function Leibniz_rule_1(l_mons::T ,r_coeffs::U, i::Integer) where {T <: MPolyRingElem{<:MPolyRingElem}, U <: MPolyRingElem}
     ret_dop = 0
     k = 1
+    coeff_var = AA.gens(parent(r_coeffs))[i]
+    mon_var = AA.gens(parent(l_mons))[i]
     while true
-        a = _nth_derivative(r_coeffs,AA.gens(parent(r_coeffs))[i],k) * _nth_derivative(l_mons, AA.gens(parent(l_mons))[i],k) / parent(r_coeffs)(factorial(big(k)))
+        # a = _nth_derivative(r_coeffs,AA.gens(parent(r_coeffs))[i],k) * _nth_derivative(l_mons, AA.gens(parent(l_mons))[i],k) / parent(r_coeffs)(factorial(big(k)))
+        a = _nth_derivative(r_coeffs, coeff_var,k) * _nth_derivative(l_mons, mon_var,k) / parent(r_coeffs)(factorial(big(k)))
         a == 0 && break
         ret_dop += a
         k += 1
