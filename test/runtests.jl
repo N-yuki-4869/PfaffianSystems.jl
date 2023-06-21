@@ -177,3 +177,9 @@ end
     D, (x,y,z), (dx,dy,dz) = weyl_algebra(["x","y","z"])
     @test isequal(dx*dy*dz*x*y*z, x*y*z*dx*dy*dz+x*y*dx*dy+x*z*dx*dz+y*z*dy*dz+x*dx+y*dy+z*dz+1)
 end
+
+@testset "DiffOpRings.jl" begin
+    D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
+    @test isequal((x//(x+1)*dx*((x^2+1)//x))*dx, (x^2+1)//(x+1)*dx^2+(x-1)//x*dx)
+    @test isequal(x//(x+1)*dx^2*((x^2+1)//x), (x^2+1)//(x+1)*dx^2+2*(x-1)//x*dx+2//(x^3+x))
+end
