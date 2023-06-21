@@ -77,19 +77,32 @@ function Base.:^(x::DORElem, y::Integer)
     return ret_dop
 end
 
+
+
+function AA.derivative(f::RatFuncElem ,x::RatFuncElem)
+    f_nume = numerator(f)
+    f_deno = denominator(f)
+    x_nume = numerator(x)
+    nume = parent(x)((AA.derivative(f_nume,x_nume)*f_deno - f_nume*AA.derivative(f_deno,x_nume)))
+    deno = parent(x)((f_deno^2))
+    #@show nume , deno, typeof(nume) , typeof(deno)
+    ret_dop = nume // deno
+    return ret_dop
+end
+
+
 function _nth_derivative(f::T ,x::T ,n::Integer) where T
     if n==0
         return f
     else
         for i=1:n
+            #@show f,x , typeof(f) , typeof(x)
             f = AA.derivative(f,x)
         end
         return f
     end
 end
 
-function rational_derivative(f,x)
-end
 
 function Leibniz_rule(l_mons::T ,r_coeffs::U) where {T <: MPolyRingElem{<:RatFuncElem}, U <: RatFuncElem}
     ret_dop = r_coeffs * l_mons
@@ -125,10 +138,10 @@ Base.:*(x::Union{Rational, Integer}, y::DORElem) = DORElem(x * y.elem)
 Base.:*(x::DORElem, y::Union{Rational, Integer}) = DORElem(x.elem * y)
 
 
-function Base.:/(x::DORElem,y::DORElem)
-   ret_dop = 0
+function Base.://(x::DORElem,y::DORElem)
+    ret_dop = 0
     x_coeff = x.elem |> AA.coefficients |> collect                   
-   x_mon = x.elem |> AA.monomials |> collect 
+    x_mon = x.elem |> AA.monomials |> collect 
     y_coeff = y.elem |> AA.coefficients |> collect    
     y_mon = y.elem |> AA.monomials |> collect
     if size(y_mon)[1] !== 1
@@ -137,9 +150,8 @@ function Base.:/(x::DORElem,y::DORElem)
         for i=1:size(x_coeff)[1]
             ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]
         end
+        return DORElem(ret_dop)
     end
-
-    return DORElem(ret_dop)
 end
 
 
