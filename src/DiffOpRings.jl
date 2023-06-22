@@ -9,7 +9,7 @@ const RatFuncElem = AA.Generic.RationalFunctionFieldElem
 #
 ############################################################
 
-struct DiffOpRing{T <: MPolyRing{<:RatFuncElem}}
+struct DiffOpRing{T <: MPolyRing{<:RatFuncElem}} <: AbstractDORing
 	DOR::T
 end
 
@@ -134,6 +134,8 @@ end
 
 Base.:+(x::Union{Rational, Integer}, y::DORElem) = DORElem(x + y.elem)
 Base.:+(x::DORElem, y::Union{Rational, Integer}) = DORElem(x.elem + y)
+Base.:-(x::Union{Rational, Integer}, y::DORElem) = DORElem(x - y.elem)
+Base.:-(x::DORElem, y::Union{Rational, Integer}) = DORElem(x.elem - y)
 Base.:*(x::Union{Rational, Integer}, y::DORElem) = DORElem(x * y.elem)
 Base.:*(x::DORElem, y::Union{Rational, Integer}) = DORElem(x.elem * y)
 
@@ -145,7 +147,8 @@ function Base.://(x::DORElem,y::DORElem)
     y_coeff = y.elem |> AA.coefficients |> collect    
     y_mon = y.elem |> AA.monomials |> collect
     if size(y_mon)[1] !== 1
-        return "Error"
+        # return "Error"
+        throw(DomainError("division by differential operator is not allowed: ", y))
     else
         for i=1:size(x_coeff)[1]
             ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]
