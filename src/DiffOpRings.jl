@@ -1,6 +1,6 @@
 import Base: ==, parent
 
-const RatFuncElem = AA.Generic.RationalFunctionFieldElem
+const RatFuncElem = Generic.RationalFunctionFieldElem
 
 ############################################################
 # 
@@ -12,19 +12,19 @@ const RatFuncElem = AA.Generic.RationalFunctionFieldElem
 struct DiffOpRing{T <: MPolyRing{<:RatFuncElem}} <: AbstractDORing
 	DOR::T
 end
+unwrap(R::DiffOpRing) = R.DOR
 
+Base.one(R::DiffOpRing) = R |> unwrap |> one |> DORElem
+Base.zero(R::DiffOpRing) = R |> unwrap |> zero |> DORElem
 
-Base.one(D::DiffOpRing) = DORElem(one(D.DOR))
-Base.zero(D::DiffOpRing) = DORElem(zero(D.DOR))
-
-function gens(D::DiffOpRing)
-	gens = D.DOR |> base_ring |> AA.gens
-	gens = D.DOR.(gens)
+function gens(R::DiffOpRing)
+	gens = R |> unwrap |> base_ring |> gens
+	gens = unwrap(R).(gens)
 	return DORElem.(gens)
 end
-dgens(D::DiffOpRing) = D.DOR |> AA.gens .|> DORElem
+dgens(D::DiffOpRing) = D.DOR |> gens .|> DORElem
 
-nvars(D::DiffOpRing) = D.DOR |> AA.nvars
+nvars(D::DiffOpRing) = D.DOR |> nvars
 
 function Base.show(io::IO, D::DiffOpRing)
 	print(io, nvars(D), "-dimensional Diff op rings")
@@ -53,10 +53,10 @@ Base.:(==)(x::DORElem, y::DORElem) = x.elem == y.elem
 
 
 function Base.:*(l::DORElem, r::DORElem)
-    l_coeffs = l.elem |> AA.coefficients |> collect                   
-    l_mons = l.elem |> AA.monomials |> collect 
-    r_coeffs = r.elem |> AA.coefficients |> collect    
-    r_mons = r.elem |> AA.monomials |> collect
+    l_coeffs = l.elem |> coefficients |> collect                   
+    l_mons = l.elem |> monomials |> collect 
+    r_coeffs = r.elem |> coefficients |> collect    
+    r_mons = r.elem |> monomials |> collect
     l_size = l_coeffs |> size
     r_size = r_coeffs |> size
 
@@ -79,11 +79,11 @@ end
 
 
 
-function AA.derivative(f::RatFuncElem ,x::RatFuncElem)
+function derivative(f::RatFuncElem ,x::RatFuncElem)
     f_nume = numerator(f)
     f_deno = denominator(f)
     x_nume = numerator(x)
-    nume = parent(x)((AA.derivative(f_nume,x_nume)*f_deno - f_nume*AA.derivative(f_deno,x_nume)))
+    nume = parent(x)((derivative(f_nume,x_nume)*f_deno - f_nume*derivative(f_deno,x_nume)))
     deno = parent(x)((f_deno^2))
     #@show nume , deno, typeof(nume) , typeof(deno)
     ret_dop = nume // deno
@@ -97,7 +97,7 @@ function _nth_derivative(f::T ,x::T ,n::Integer) where T
     else
         for i=1:n
             #@show f,x , typeof(f) , typeof(x)
-            f = AA.derivative(f,x)
+            f = derivative(f,x)
         end
         return f
     end
@@ -106,10 +106,10 @@ end
 
 function Leibniz_rule(l_mons::T ,r_coeffs::U) where {T <: MPolyRingElem{<:RatFuncElem}, U <: RatFuncElem}
     ret_dop = r_coeffs * l_mons
-    variable = size(AA.gens(parent(l_mons)))[1]
+    variable = size(gens(parent(l_mons)))[1]
     for i=1:variable
-        coeffs = collect(AA.coefficients(ret_dop))
-        mons = collect(AA.monomials(ret_dop))
+        coeffs = collect(coefficients(ret_dop))
+        mons = collect(monomials(ret_dop))
         coeffs_size = size(coeffs)[1]
         for j=1:coeffs_size
             ret_dop += Leibniz_rule_1(mons[j],coeffs[j],i)
@@ -123,7 +123,7 @@ function Leibniz_rule_1(l_mons::T ,r_coeffs:: U, i::Integer) where {T <: MPolyRi
     ret_dop = 0
     k = 1
     while true
-        a = _nth_derivative(r_coeffs,AA.gens(parent(r_coeffs))[i],k) * _nth_derivative(l_mons, AA.gens(parent(l_mons))[i],k) / parent(r_coeffs)(factorial(big(k)))
+        a = _nth_derivative(r_coeffs,gens(parent(r_coeffs))[i],k) * _nth_derivative(l_mons, gens(parent(l_mons))[i],k) / parent(r_coeffs)(factorial(big(k)))
         a == 0&&break
         ret_dop += a
         k += 1
@@ -142,10 +142,10 @@ Base.:*(x::DORElem, y::Union{Rational, Integer}) = DORElem(x.elem * y)
 
 function Base.://(x::DORElem,y::DORElem)
     ret_dop = 0
-    x_coeff = x.elem |> AA.coefficients |> collect                   
-    x_mon = x.elem |> AA.monomials |> collect 
-    y_coeff = y.elem |> AA.coefficients |> collect    
-    y_mon = y.elem |> AA.monomials |> collect
+    x_coeff = x.elem |> coefficients |> collect                   
+    x_mon = x.elem |> monomials |> collect 
+    y_coeff = y.elem |> coefficients |> collect    
+    y_mon = y.elem |> monomials |> collect
     if size(y_mon)[1] !== 1
         # return "Error"
         throw(DomainError("division by differential operator is not allowed: ", y))
