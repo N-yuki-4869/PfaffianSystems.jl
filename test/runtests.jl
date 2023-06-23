@@ -181,5 +181,5 @@ end
 @testset "DiffOpRings.jl" begin
     D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
     @test isequal((x//(x+1)*dx*((x^2+1)//x))*dx, (x^2+1)//(x+1)*dx^2+(x-1)//x*dx)
-    @test isequal(x//(x+1)*dx^2*((x^2+1)//x), (x^2+1)//(x+1)*dx^2+2*(x-1)//x*dx+2//(x^3+x))
+    @test isequal(x//(x+1)*dx^2*((x^2+1)//x), (x^2+1)//(x+1)*dx^2+(2*x-2)//x*dx+2//(x^3+x^2))
 end
