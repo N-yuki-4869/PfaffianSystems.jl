@@ -30,6 +30,9 @@ function Base.show(io::IO, R::DiffOpRing)
 	print(io, nvars(R), "-dimensional ring of differential opeartors in [$(join(string.(gens(R)), ","))]")
 end
 
+function (R::DiffOpRing)(num::Union{Rational, Integer})
+    unwrap(R)(num) |> DORElem
+end
 
 struct DORElem{T <: MPolyRingElem{<:RatFuncElem}} <: AbstractDiffOp
 	elem::T
@@ -140,6 +143,31 @@ Base.:-(x::DORElem, y::Union{Rational, Integer}) = DORElem(unwrap(x) - y)
 Base.:*(x::Union{Rational, Integer}, y::DORElem) = DORElem(x * unwrap(y))
 Base.:*(x::DORElem, y::Union{Rational, Integer}) = DORElem(unwrap(x) * y)
 
+Base.://(x::DORElem,y::Union{Rational, Integer}) = x//(parent(x)(y))
+Base.://(x::Union{Rational, Integer},y::DORElem) = (parent(y)(x))//y
+
+# function Base.://(x::DORElem,y::Union{Rational, Integer})
+#     ret_dop = 0
+#     x_coeff = x |> unwrap |> coefficients |> collect                   
+#     x_mon = x |> unwrap |> monomials |> collect 
+#     for i=1:size(x_coeff)[1]
+#         ret_dop += (x_coeff[i]//y)*x_mon[i]
+#     end
+#     return DORElem(ret_dop)
+# end
+
+# function Base.://(x::Union{Rational, Integer},y::DORElem)
+#     y_coeff = y |> unwrap |> coefficients |> collect    
+#     y_mon = y |> unwrap |> monomials |> collect
+#     size(y_mon)[1] != 1 && return throw(DomainError("division by differential operator", string(y)))
+#     if y_mon[1] != 1
+#         return throw(DomainError("division by differential operator", string(y)))
+#     else
+#         ret_dop = parent(x)(x) // y_coeff[1]
+#         return DORElem(ret_dop)
+#     end
+# end
+
 
 function Base.://(x::DORElem,y::DORElem)
     ret_dop = 0
@@ -147,9 +175,9 @@ function Base.://(x::DORElem,y::DORElem)
     x_mon = x |> unwrap |> monomials |> collect 
     y_coeff = y |> unwrap |> coefficients |> collect    
     y_mon = y |> unwrap |> monomials |> collect
-    if size(y_mon)[1] !== 1
-        # return "Error"
-        throw(DomainError("division by differential operator", string(y)))
+    size(y_mon)[1] != 1 && return throw(DomainError("division by differential operator", string(y)))
+    if y_mon[1] != 1
+        return throw(DomainError("division by differential operator", string(y)))
     else
         for i=1:size(x_coeff)[1]
             ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]
