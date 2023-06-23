@@ -296,5 +296,14 @@ function intersection(Is::DIdeal{T}...) where T <: AbstractDiffOp
 end
 
 
+function coerce()
+
+end
+function variable_equal(x,y)
+
+end
+
+
+
 
 
