@@ -7,7 +7,7 @@ using Test
     # Write your tests here.
 end
 
-using PfaffianSystems: makeTestVarsAndIdeal
+# using PfaffianSystems: makeTestVarsAndIdeal
 
 using Symbolics: @variables
 using AbstractAlgebra: QQ

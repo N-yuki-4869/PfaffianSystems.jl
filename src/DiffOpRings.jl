@@ -18,45 +18,46 @@ Base.one(R::DiffOpRing) = R |> unwrap |> one |> DORElem
 Base.zero(R::DiffOpRing) = R |> unwrap |> zero |> DORElem
 
 function gens(R::DiffOpRing)
-	gens = R |> unwrap |> base_ring |> gens
-	gens = unwrap(R).(gens)
-	return DORElem.(gens)
+	g = R |> unwrap |> base_ring |> gens
+	g = unwrap(R).(g)
+	return DORElem.(g)
 end
-dgens(D::DiffOpRing) = D.DOR |> gens .|> DORElem
+dgens(R::DiffOpRing) = R |> unwrap |> gens .|> DORElem
 
-nvars(D::DiffOpRing) = D.DOR |> nvars
+nvars(R::DiffOpRing) = R |> unwrap |> nvars
 
-function Base.show(io::IO, D::DiffOpRing)
-	print(io, nvars(D), "-dimensional Diff op rings")
+function Base.show(io::IO, R::DiffOpRing)
+	print(io, nvars(R), "-dimensional ring of differential opeartors in [$(join(string.(gens(R)), ","))]")
 end
 
 
 struct DORElem{T <: MPolyRingElem{<:RatFuncElem}} <: AbstractDiffOp
 	elem::T
 end
+unwrap(wae::DORElem) = wae.elem
 
 
-Base.parent(wae::DORElem) = DiffOpRing(parent(wae.elem))
-gens(wae::DORElem) = gens(parent(wae))
-dgens(wae::DORElem) = dgens(parent(wae))
+Base.parent(wae::DORElem) = wae |> unwrap |> parent |> DiffOpRing
+gens(wae::DORElem) = wae |> parent |> gens
+dgens(wae::DORElem) = wae |> parent |> dgens
 
 function Base.show(io::IO, wae::DORElem)
-	print(io, wae.elem)
+	print(io, unwrap(wae))
 end
 
-Base.:+(x::DORElem, y::DORElem) = DORElem(x.elem + y.elem)
-Base.:-(x::DORElem, y::DORElem) = DORElem(x.elem - y.elem)
-Base.one(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = DiffOpRing(one(wae.elem))
-Base.zero(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = DiffOpRing(zero(wae.elem))
+Base.:+(x::DORElem, y::DORElem) = DORElem(unwrap(x) + unwrap(y))
+Base.:-(x::DORElem, y::DORElem) = DORElem(unwrap(x) - unwrap(y))
+Base.one(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> one |> DORElem
+Base.zero(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> zero |> DORElem
 
-Base.:(==)(x::DORElem, y::DORElem) = x.elem == y.elem
+Base.:(==)(x::DORElem, y::DORElem) = unwrap(x) == unwrap(y)
 
 
 function Base.:*(l::DORElem, r::DORElem)
-    l_coeffs = l.elem |> coefficients |> collect                   
-    l_mons = l.elem |> monomials |> collect 
-    r_coeffs = r.elem |> coefficients |> collect    
-    r_mons = r.elem |> monomials |> collect
+    l_coeffs = l |> unwrap |> coefficients |> collect                   
+    l_mons = l |> unwrap |> monomials |> collect 
+    r_coeffs = r |> unwrap |> coefficients |> collect    
+    r_mons = r |> unwrap |> monomials |> collect
     l_size = l_coeffs |> size
     r_size = r_coeffs |> size
 
@@ -124,7 +125,7 @@ function Leibniz_rule_1(l_mons::T ,r_coeffs:: U, i::Integer) where {T <: MPolyRi
     k = 1
     while true
         a = _nth_derivative(r_coeffs,gens(parent(r_coeffs))[i],k) * _nth_derivative(l_mons, gens(parent(l_mons))[i],k) / parent(r_coeffs)(factorial(big(k)))
-        a == 0&&break
+        a == 0 && break
         ret_dop += a
         k += 1
     end
@@ -132,23 +133,23 @@ function Leibniz_rule_1(l_mons::T ,r_coeffs:: U, i::Integer) where {T <: MPolyRi
 end
 
 
-Base.:+(x::Union{Rational, Integer}, y::DORElem) = DORElem(x + y.elem)
-Base.:+(x::DORElem, y::Union{Rational, Integer}) = DORElem(x.elem + y)
-Base.:-(x::Union{Rational, Integer}, y::DORElem) = DORElem(x - y.elem)
-Base.:-(x::DORElem, y::Union{Rational, Integer}) = DORElem(x.elem - y)
-Base.:*(x::Union{Rational, Integer}, y::DORElem) = DORElem(x * y.elem)
-Base.:*(x::DORElem, y::Union{Rational, Integer}) = DORElem(x.elem * y)
+Base.:+(x::Union{Rational, Integer}, y::DORElem) = DORElem(x + unwrap(y))
+Base.:+(x::DORElem, y::Union{Rational, Integer}) = DORElem(unwrap(x) + y)
+Base.:-(x::Union{Rational, Integer}, y::DORElem) = DORElem(x - unwrap(y))
+Base.:-(x::DORElem, y::Union{Rational, Integer}) = DORElem(unwrap(x) - y)
+Base.:*(x::Union{Rational, Integer}, y::DORElem) = DORElem(x * unwrap(y))
+Base.:*(x::DORElem, y::Union{Rational, Integer}) = DORElem(unwrap(x) * y)
 
 
 function Base.://(x::DORElem,y::DORElem)
     ret_dop = 0
-    x_coeff = x.elem |> coefficients |> collect                   
-    x_mon = x.elem |> monomials |> collect 
-    y_coeff = y.elem |> coefficients |> collect    
-    y_mon = y.elem |> monomials |> collect
+    x_coeff = x |> unwrap |> coefficients |> collect                   
+    x_mon = x |> unwrap |> monomials |> collect 
+    y_coeff = y |> unwrap |> coefficients |> collect    
+    y_mon = y |> unwrap |> monomials |> collect
     if size(y_mon)[1] !== 1
         # return "Error"
-        throw(DomainError("division by differential operator is not allowed: ", y))
+        throw(DomainError("division by differential operator", string(y)))
     else
         for i=1:size(x_coeff)[1]
             ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]

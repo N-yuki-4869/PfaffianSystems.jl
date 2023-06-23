@@ -19,7 +19,7 @@ using Bijections
 # using Symbolics: scalarize
 using Base: @invokelatest
 using AbstractAlgebra
-import AbstractAlgebra: nvars, gens, base_ring, intersection
+import AbstractAlgebra: nvars, gens, base_ring, intersection, derivative
 const AA = AbstractAlgebra
 function Bijection{S, T}(dict::AbstractDict{S, T}) where S where T
 	return Bijection(dict)

@@ -38,8 +38,8 @@ end
 unwrap(wae::WAlgElem) = wae.elem
 
 Base.parent(wae::WAlgElem) = wae |> unwrap |> parent |> WeylAlgebra
-gens(wae::WAlgElem) = gens(parent(wae))
-dgens(wae::WAlgElem) = dgens(parent(wae))
+gens(wae::WAlgElem) = wae |> parent |> gens
+dgens(wae::WAlgElem) = wae |> parent |> dgens
 
 function Base.show(io::IO, wae::WAlgElem)
 	show(io, unwrap(wae))
