@@ -8,6 +8,7 @@ import Base: ==, parent
 
 # WeylAlgebra{T} = MPolyRing{MPolyRingElem{T}} where T
 
+# TODO: add inner constructor to enforce the correspondence between variables and derivations and prohibit duplication of variable names
 struct WeylAlgebra{T <: MPolyRing{<:MPolyRingElem}} <: AbstractDORing
 	WAlg::T
 end
@@ -141,18 +142,6 @@ end
 # TODO: coefficients of WAlgElem 
 # TODO: monomials of WAlgElem 
 # TODO: terms of WAlgElem
-
-# TODO: make polynomials coercible
-function change_ring(wae::WAlgElem, D::AbstractDORing)
-    R = base_ring(D)
-    unwrapD = unwrap(D)
-    cmzip = zip(coefficients(unwrap(wae)), monomials(unwrap(wae)))
-    ret_dop = unwrapD(0)
-    for (c, m) in cmzip
-        # ret_dop += R(c) * unwrapD(m)
-    end
-    return D(ret_dop)
-end
 
 ############################################################
 # 
@@ -295,9 +284,58 @@ function intersection(Is::DIdeal{T}...) where T <: AbstractDiffOp
 	# return DIdeal(filter(notHasTmpVar, elimOrdGens), Dict((v, d) for (v,d) in zip(vars, diffops)) |> Bijection)
 end
 
+function genNo2str_dict(D::AbstractDORing)
+    bj = Bijection{Integer, String}()
+    for (i, g) in enumerate(gens(D))
+        bj[i] = string(g)
+    end
+    return bj
+end
 
-function coerce()
+function coercion_homomorphism(D1::AbstractDORing, D2::AbstractDORing)
+    bj1 = genNo2str_dict(D1) 
+    bj2 = genNo2str_dict(D2)
 
+    common_vars_str = intersect(bj1.range, bj2.range)
+    common_vars_str |> isempty && throw(DomainError("Cannot determine homomorphism from " * string(D1) * " to " * string(D2)))
+
+    hom = Bijection{Integer, Integer}()
+
+    for s in common_vars_str
+        hom[bj1(s)] = bj2(s)
+    end
+
+    return hom
+end
+
+function coerce(x::WAlgElem, D::WeylAlgebra)
+    hom = coercion_homomorphism(parent(x), D) 
+    n = nvars(D)
+
+    # define mapping from index of D to index of parent(x)
+    index_map = Dict{Integer, Integer}()
+    invhom = inv(hom)
+    for i = 1:n
+        index_map[i] = get(invhom, i, 0)
+    end
+
+    cezip = zip(coefficients(unwrap(x)), exponent_vectors(unwrap(x)))
+    M = Generic.MPolyBuildCtx(unwrap(D))
+    for (c, e) in cezip
+
+        # coersion of coefficient
+        @show c, typeof(c), e, typeof(e)
+        ccezip = zip(coefficients(c), exponent_vectors(c))
+        C = Generic.MPolyBuildCtx(base_ring(D))
+        for (cc, ce) in ccezip
+            @show cc, typeof(cc), ce, typeof(ce)
+            push_term!(C, cc, [get(ce, index_map[i], 0) for i in 1:n])
+        end
+        coerced_c = finish(C)
+
+        push_term!(M, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
+    end
+    finish(M) |> WAlgElem
 end
 function variable_equal(x,y)
 
