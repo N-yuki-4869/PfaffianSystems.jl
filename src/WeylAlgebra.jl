@@ -11,6 +11,13 @@ import Base: ==, parent
 # TODO: add inner constructor to enforce the correspondence between variables and derivations and prohibit duplication of variable names
 struct WeylAlgebra{T <: MPolyRing{<:MPolyRingElem}} <: AbstractDORing
 	WAlg::T
+
+    function WeylAlgebra(F::Field, s::Vector{Symbol}; kw...) 
+        ds = Symbol.("d" .* string.(s))
+        polyR = AbstractAlgebra.polynomial_ring_only(F, s; kw...)
+        raw_D = AbstractAlgebra.polynomial_ring_only(polyR, ds; kw...)
+        new{typeof(raw_D)}(raw_D)
+    end
 end
 unwrap(D::WeylAlgebra) = D.WAlg
 
@@ -165,26 +172,30 @@ Base.:*(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(unwrap(x) * y)
 	WeylAlgebra
 """
 # weyl_algebra(R::Ring, s::Union{Tuple{Vararg{T}}, AbstractVector{T}}; kw...)
-function weyl_algebra(F::Field, s::Vector{Symbol}, ds::Vector{Symbol}; kw...)
-	R, gens_R = polynomial_ring(F, s; kw...)
-	D, gens_D = polynomial_ring(R, ds; kw...)
-    gens_R = D.(gens_R)
-    D = WeylAlgebra(D)
-	(D, WAlgElem.(gens_R), WAlgElem.(gens_D))
-end
+# function weyl_algebra(F::Field, s::Vector{Symbol}, ds::Vector{Symbol}; kw...)
+# 	R, gens_R = polynomial_ring(F, s; kw...)
+# 	D, gens_D = polynomial_ring(R, ds; kw...)
+#     gens_R = D.(gens_R)
+#     D = WeylAlgebra(D)
+# 	(D, WAlgElem.(gens_R), WAlgElem.(gens_D))
+# end
 
-function weyl_algebra(F::Field, s::Symbol, ds::Symbol; kw...)
-    D, x, dx = weyl_algebra(F, [s], [ds]; kw...)
-    return D, x[1], dx[1]
-end
+# function weyl_algebra(F::Field, s::Symbol, ds::Symbol; kw...)
+#     D, x, dx = weyl_algebra(F, [s], [ds]; kw...)
+#     return D, x[1], dx[1]
+# end
 
 function weyl_algebra(F::Field, s::AbstractVector{<:AbstractString}; kw...)
-	weyl_algebra(F, Symbol.(s), Symbol.("d".*s); kw...)
+	# weyl_algebra(F, Symbol.(s), Symbol.("d".*s); kw...)
+    D = WeylAlgebra(F, Symbol.(s))
+    return D, gens(D), dgens(D)
 end
 weyl_algebra(s::AbstractVector{<:AbstractString}; kw...) = weyl_algebra(QQ, s; kw...)
 
 function weyl_algebra(F::Field, s::AbstractString; kw...)
-    weyl_algebra(F, Symbol(s), Symbol("d"*s); kw...)
+    # weyl_algebra(F, Symbol(s), Symbol("d"*s); kw...)
+    D = WeylAlgebra(F, [Symbol(s)])
+    return D, gens(D)[1], dgens(D)[1]
 end
 weyl_algebra(s::AbstractString; kw...) = weyl_algebra(QQ, s; kw...)
 
