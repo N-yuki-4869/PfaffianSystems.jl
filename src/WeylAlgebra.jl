@@ -28,9 +28,14 @@ base_ring(D::WeylAlgebra) = D |> unwrap |> base_ring
 function gens(D::WeylAlgebra)
     g = D |> base_ring |> gens
     g = unwrap(D).(g)
-    g .|> WAlgElem
+    # g .|> WAlgElem
+    return g .|> (s->WAlgElem(D, s))
 end
-dgens(D::WeylAlgebra) = D |> unwrap |> gens .|> WAlgElem
+# dgens(D::WeylAlgebra) = D |> unwrap |> gens .|> WAlgElem
+function dgens(D::WeylAlgebra)
+    dg = D |> unwrap |> gens
+    return dg .|> (s->WAlgElem(D, s))
+end
 nvars(D::WeylAlgebra) = D |> unwrap |> nvars
 
 function Base.show(io::IO, D::WeylAlgebra)
@@ -41,11 +46,13 @@ end
 
 
 struct WAlgElem{T <: MPolyRingElem{<:MPolyRingElem}} <: AbstractDiffOp
+    parent::WeylAlgebra
 	elem::T
 end
 unwrap(wae::WAlgElem) = wae.elem
 
-Base.parent(wae::WAlgElem) = wae |> unwrap |> parent |> WeylAlgebra
+# Base.parent(wae::WAlgElem) = wae |> unwrap |> parent |> WeylAlgebra
+Base.parent(wae::WAlgElem) = wae.parent
 gens(wae::WAlgElem) = wae |> parent |> gens
 dgens(wae::WAlgElem) = wae |> parent |> dgens
 
@@ -53,15 +60,15 @@ function Base.show(io::IO, wae::WAlgElem)
 	show(io, unwrap(wae))
 end
 
-Base.:+(x::WAlgElem, y::WAlgElem) = WAlgElem(unwrap(x) + unwrap(y))
-Base.:-(x::WAlgElem, y::WAlgElem) = WAlgElem(unwrap(x) - unwrap(y))
+Base.:+(x::WAlgElem{T}, y::WAlgElem{T}) where T <: MPolyRingElem = WAlgElem{T}(parent(x), unwrap(x) + unwrap(y))
+Base.:-(x::WAlgElem{T}, y::WAlgElem{T}) where T <: MPolyRingElem = WAlgElem{T}(parent(x), unwrap(x) - unwrap(y))
 Base.one(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> one |> WAlgElem
 Base.zero(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> zero |> WAlgElem
 
-Base.:(==)(x::WAlgElem, y::WAlgElem) = unwrap(x) == unwrap(y)
+Base.:(==)(x::WAlgElem{T}, y::WAlgElem{T}) where T <: MPolyRingElem = unwrap(x) == unwrap(y)
 
 # TODO: multiplication of WAlgElem
-function Base.:*(l::WAlgElem, r::WAlgElem)
+function Base.:*(l::WAlgElem{T}, r::WAlgElem{T}) where T <: MPolyRingElem
     # l_coeffs = l.elem |> coefficients |> collect                   
     # l_mons = l.elem |> monomials |> collect 
     # r_coeffs = r.elem |> coefficients |> collect    
@@ -82,7 +89,7 @@ function Base.:*(l::WAlgElem, r::WAlgElem)
     for (lc, lm) in zip(l_coeffs, l_mons), (rc, rm) in zip(r_coeffs, r_mons) 
         ret_dop +=  lc * Leibniz_rule(lm, rc) * rm
     end
-    return WAlgElem(ret_dop)
+    return WAlgElem(parent(l), ret_dop)
 end
 
 function Base.:^(x::WAlgElem, y::Integer)
@@ -155,12 +162,12 @@ end
 # Arithemetic with Rationals and Integers
 #
 ############################################################
-Base.:+(x::Union{Rational, Integer}, y::WAlgElem) = WAlgElem(x + unwrap(y))
-Base.:+(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(unwrap(x) + y)
-Base.:-(x::Union{Rational, Integer}, y::WAlgElem) = WAlgElem(x - unwrap(y))
-Base.:-(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(unwrap(x) - y)
-Base.:*(x::Union{Rational, Integer}, y::WAlgElem) = WAlgElem(x * unwrap(y))
-Base.:*(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(unwrap(x) * y)
+Base.:+(x::Union{Rational, Integer}, y::WAlgElem) = WAlgElem(parent(y), x + unwrap(y))
+Base.:+(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(parent(x), unwrap(x) + y)
+Base.:-(x::Union{Rational, Integer}, y::WAlgElem) = WAlgElem(parent(y), x - unwrap(y))
+Base.:-(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(parent(x), unwrap(x) - y)
+Base.:*(x::Union{Rational, Integer}, y::WAlgElem) = WAlgElem(parent(y), x * unwrap(y))
+Base.:*(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(parent(x), unwrap(x) * y)
 
 ############################################################
 # 
@@ -228,6 +235,10 @@ end
 base_ring(I::DIdeal) = I.base_ring
 gens(I::DIdeal) = I.gens
 
+function (D::WeylAlgebra)(I::DIdeal)
+    DIdeal(D, I |> gens .|> (s->coerce(s, D)))
+end
+
 # TOTO: make ideals extensible
 # function extension(I::DIdeal, D::AbstractDORing)
 #     R = base_ring(D)
@@ -246,23 +257,31 @@ gens(I::DIdeal) = I.gens
 
 Return the intersection of the D-ideals `Is[1]`, `Is[2]`, ...
 """
-function intersection(Is::DIdeal{T}...) where T <: AbstractDiffOp
-	m = length(Is)
-    var_strs = base_ring(Is[1]) |> base_ring |> symbols .|> string
-    n = length(var_strs) 
+function intersection(I1::DIdeal{T}, I2::DIdeal{T}) where T <: AbstractDiffOp
+    base_ring(I1) != base_ring(I2) && throw(DomainError("Base rings must be the same", string(base_ring(I1)), string(base_ring(I2))))
 
-    Dt, v, dv = weyl_algebra([var_strs; ["t"*string(i) for i in 1:m]])
-    t = v[n+1:end]
-    dt = dv[n+1:end]
+    var_strs = I1 |> base_ring |> gens .|> string
+
+    Dt, v, dv = weyl_algebra([var_strs; ["t1", "t2"]])
+    
+end
+# function intersection(Is::DIdeal{T}...) where T <: AbstractDiffOp
+	# m = length(Is)
+    # var_strs = base_ring(Is[1]) |> base_ring |> symbols .|> string
+    # n = length(var_strs) 
+
+    # Dt, v, dv = weyl_algebra([var_strs; ["t"*string(i) for i in 1:m]])
+    # t = v[n+1:end]
+    # dt = dv[n+1:end]
 
 	# t, dt, v2d_t = genVars("t", m)
 	# v2d_all = Bijection{Num, Num}()
 
-	genJ = [reduce(+, t)-1]
-    for i = 1:m
-        append!(genJ, gens(Is[i]))
-    end
-    @show genJ
+	# genJ = [reduce(+, t)-1]
+    # for i = 1:m
+    #     append!(genJ, gens(Is[i]))
+    # end
+    # @show genJ
 	# for i = 1:m
 	# 	append!(genJ, Is[i].gens .* t[i])
 	# 	for p in Is[i].v2d
@@ -293,7 +312,7 @@ function intersection(Is::DIdeal{T}...) where T <: AbstractDiffOp
 	# notHasTmpVar(diffOp) = (get_variables(diffOp), [t; dt]) .|> Set |> (s->intersect(s...)) |> isempty
 
 	# return DIdeal(filter(notHasTmpVar, elimOrdGens), Dict((v, d) for (v,d) in zip(vars, diffops)) |> Bijection)
-end
+# end
 
 function genNo2str_dict(D::AbstractDORing)
     bj = Bijection{Integer, String}()
@@ -346,12 +365,10 @@ function coerce(x::WAlgElem, D::WeylAlgebra)
 
         push_term!(M, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
     end
-    finish(M) |> WAlgElem
-end
-function variable_equal(x,y)
-
+    WAlgElem(D, finish(M))
 end
 
+(D::WeylAlgebra)(x::WAlgElem) = coerce(x, D)
 
 
 
