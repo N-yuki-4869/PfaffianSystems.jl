@@ -13,6 +13,7 @@ struct WeylAlgebra{T <: MPolyRing{<:MPolyRingElem}} <: AbstractDORing
 	WAlg::T
 
     function WeylAlgebra(F::Field, s::Vector{Symbol}; kw...) 
+        length(s) != length(unique(s)) && throw(ArgumentError("variables must be unique"))
         ds = Symbol.("d" .* string.(s))
         polyR = AbstractAlgebra.polynomial_ring_only(F, s; kw...)
         raw_D = AbstractAlgebra.polynomial_ring_only(polyR, ds; kw...)
@@ -178,20 +179,6 @@ Base.:*(x::WAlgElem, y::Union{Rational, Integer}) = WAlgElem(parent(x), unwrap(x
 """
 	WeylAlgebra
 """
-# weyl_algebra(R::Ring, s::Union{Tuple{Vararg{T}}, AbstractVector{T}}; kw...)
-# function weyl_algebra(F::Field, s::Vector{Symbol}, ds::Vector{Symbol}; kw...)
-# 	R, gens_R = polynomial_ring(F, s; kw...)
-# 	D, gens_D = polynomial_ring(R, ds; kw...)
-#     gens_R = D.(gens_R)
-#     D = WeylAlgebra(D)
-# 	(D, WAlgElem.(gens_R), WAlgElem.(gens_D))
-# end
-
-# function weyl_algebra(F::Field, s::Symbol, ds::Symbol; kw...)
-#     D, x, dx = weyl_algebra(F, [s], [ds]; kw...)
-#     return D, x[1], dx[1]
-# end
-
 function weyl_algebra(F::Field, s::AbstractVector{<:AbstractString}; kw...)
 	# weyl_algebra(F, Symbol.(s), Symbol.("d".*s); kw...)
     D = WeylAlgebra(F, Symbol.(s))
@@ -222,7 +209,7 @@ mutable struct DIdeal{T <: AbstractDiffOp} <: Ideal{T}
     function DIdeal{T}(R::AbstractDORing, gens::Vector) where T <: AbstractDiffOp
         if !all([R == parent(g) for g in gens])
             # error("All generators must be elements of the same Weyl algebra")
-            throw(DomainError("All generators must be included in", R))
+            throw(ArgumentError("All generators must be included in", R))
         end
         new{T}(R, gens)
     end 
