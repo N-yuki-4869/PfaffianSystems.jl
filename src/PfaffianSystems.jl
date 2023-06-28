@@ -45,7 +45,7 @@ abstract type AbstractDORing end
 # export PfaffianSystem, get_vars, get_dvars, buildFuncA, integratePf, applyStdMons, denomLCM
 
 include("WeylAlgebra.jl")
-export weyl_algebra, DIdeal, intersection, change_ring
+export weyl_algebra, DIdeal, intersection, change_ring, coerce
 export gens, dgens, base_ring, nvars
 
 include("DiffOpRings.jl")
