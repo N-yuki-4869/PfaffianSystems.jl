@@ -328,10 +328,11 @@ end
 function coerce(x::WAlgElem, D::WeylAlgebra)
     hom = coercion_homomorphism(parent(x), D) 
     n = nvars(D)
-
+    @show(n)
     # define mapping from index of D to index of parent(x)
     index_map = Dict{Integer, Integer}()
     invhom = inv(hom)
+    @show invhom
     for i = 1:n
         index_map[i] = get(invhom, i, 0)
     end
@@ -349,6 +350,8 @@ function coerce(x::WAlgElem, D::WeylAlgebra)
             push_term!(C, cc, [get(ce, index_map[i], 0) for i in 1:n])
         end
         coerced_c = finish(C)
+        @show coerced_c
+        @show M
 
         push_term!(M, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
     end
@@ -356,7 +359,3 @@ function coerce(x::WAlgElem, D::WeylAlgebra)
 end
 
 (D::WeylAlgebra)(x::WAlgElem) = coerce(x, D)
-
-
-
-
