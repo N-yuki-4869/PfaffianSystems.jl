@@ -241,10 +241,9 @@ function coerce(x::DORElem, D::DiffOpRing)
         @show c, typeof(c), e, typeof(e)
         c_nume = numerator(c)
         c_deno = denominator(c)
-        nume = parent(c)(c_nume)
-        deno = parent(c)(c_deno)
-        c_2 = nume // deno
-        ccezip = zip(coefficients(c_2), exponent_vectors(c))
+        ccezip_nume = zip(coefficient(c_nume), exponent_vectors(c_nume))
+        ccezip_deno = zip(coefficient(c_deno), exponent_vectors(c_deno))
+        ccezip = zip(coefficients(c), exponent_vectors(c))
         C = Generic.MPolyBuildCtx(base_ring(D))
         for (cc, ce) in ccezip
             @show cc, typeof(cc), ce, typeof(ce)
