@@ -221,3 +221,40 @@ function diff_op_ring(F::Field, s::AbstractString; kw...)
 end
 diff_op_ring(s::AbstractString; kw...) = diff_op_ring(QQ, s; kw...)
 
+
+
+
+
+function coerce(x::DORElem, D::DiffOpRing)
+    hom = coercion_homomorphism(parent(x), D)
+    n = nvars(D)
+
+    index_map = Dict{Integer, Integer}()
+    invhom = inv(hom)
+    for i = 1:n
+        index_map[i] = get(invhom, i, 0)
+    end
+
+    cezip = zip(coefficients(unwrap(x)), exponent_vectors(unwrap(x)))
+    M = Generic.MPolyBuildCtx(unwrap(D))
+    for (c, e) in cezip
+        @show c, typeof(c), e, typeof(e)
+        c_nume = numerator(c)
+        c_deno = denominator(c)
+        nume = parent(c)(c_nume)
+        deno = parent(c)(c_deno)
+        c_2 = nume // deno
+        ccezip = zip(coefficients(c_2), exponent_vectors(c))
+        C = Generic.MPolyBuildCtx(base_ring(D))
+        for (cc, ce) in ccezip
+            @show cc, typeof(cc), ce, typeof(ce)
+            push_term!(C, cc, [get(ce, index_map[i], 0) for i in 1:n])
+        end
+        coerced_c = finish(c)
+
+        push_term!(M, coerced_c, [get(e, index_map[i], 0) fpr i in 1:n])
+    end
+    DORElem(finish(M))
+end
+
+(D::DiffOpRing)(x::DORElem) = coerce(x, D)
