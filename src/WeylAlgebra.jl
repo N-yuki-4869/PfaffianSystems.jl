@@ -348,6 +348,7 @@ function coerce(x::WAlgElem, D::WeylAlgebra)
         for (cc, ce) in ccezip
             @show cc, typeof(cc), ce, typeof(ce)
             push_term!(C, cc, [get(ce, index_map[i], 0) for i in 1:n])
+            @show index_map
         end
         coerced_c = finish(C)
         @show coerced_c
