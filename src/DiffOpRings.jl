@@ -224,6 +224,34 @@ diff_op_ring(s::AbstractString; kw...) = diff_op_ring(QQ, s; kw...)
 
 
 
+function coerce(x::RatFuncElem, R::Generic.RationalFunctionField, index_map::Dict{<:Integer, <:Integer})
+    n = length(index_map)
+    #coercion of numerator
+    x_nume = numerator(x)
+    MPoly_nume = R |> zero |> numerator |> parent
+    cezip_nume = zip(coefficients(x_nume), exponent_vectors(x_nume))
+    M_nume = Generic.MPolyBuildCtx(MPoly_nume)
+    for (c,e) in cezip_nume
+        push_term!(M_nume, c, [get(e, index_map[i], 0) for i in 1:n])
+    end
+    coerced_nume = finish(M_nume)
+    @show coerced_nume
+
+    #coercion of denominator
+    x_deno = denominator(x)
+    cezip_deno = zip(coefficients(x_deno), exponent_vectors(x_deno))
+    M_deno = Generic.MPolyBuildCtx(MPoly_nume)
+    for (c,e) in cezip_deno
+        push_term!(M_deno, c, [get(e, index_map[i], 0) for i in 1:n])
+    end
+    coerced_deno = finish(M_deno)
+    @show coerced_deno
+
+
+    # return coerced numerator divided ny coerced denominator
+
+    return R(coerced_nume) // R(coerced_deno)
+end
 
 function coerce(x::DORElem, D::DiffOpRing)
     hom = coercion_homomorphism(parent(x), D)
@@ -237,23 +265,12 @@ function coerce(x::DORElem, D::DiffOpRing)
 
     cezip = zip(coefficients(unwrap(x)), exponent_vectors(unwrap(x)))
     M = Generic.MPolyBuildCtx(unwrap(D))
-    for (c, e) in cezip
-        @show c, typeof(c), e, typeof(e)
-        c_nume = numerator(c)
-        c_deno = denominator(c)
-        ccezip_nume = zip(coefficient(c_nume), exponent_vectors(c_nume))
-        ccezip_deno = zip(coefficient(c_deno), exponent_vectors(c_deno))
-        ccezip = zip(coefficients(c), exponent_vectors(c))
-        C = Generic.MPolyBuildCtx(base_ring(D))
-        for (cc, ce) in ccezip
-            @show cc, typeof(cc), ce, typeof(ce)
-            push_term!(C, cc, [get(ce, index_map[i], 0) for i in 1:n])
-        end
-        coerced_c = finish(c)
 
-        push_term!(M, coerced_c, [get(e, index_map[i], 0) fpr i in 1:n])
+    for (c,e) in cezip
+        ccezip = zip(coerce(c,), exponent_vectors())
     end
-    DORElem(finish(M))
+
+
 end
 
 (D::DiffOpRing)(x::DORElem) = coerce(x, D)
