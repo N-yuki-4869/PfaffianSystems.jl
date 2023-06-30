@@ -39,6 +39,8 @@ function dgens(D::WeylAlgebra)
 end
 nvars(D::WeylAlgebra) = D |> unwrap |> nvars
 
+elem_type(D::Union{Type{WeylAlgebra{T}}, WeylAlgebra{T}}) where {S <: MPolyRingElem, T <: MPolyRing{S}} = WAlgElem{Generic.MPoly{S}}
+
 function Base.show(io::IO, D::WeylAlgebra)
     print(io, nvars(D),"-dimensional Weyl algebra in [$(join(string.(gens(D)), ","))]")
 end

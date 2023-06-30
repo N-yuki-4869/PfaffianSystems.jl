@@ -17,6 +17,7 @@ unwrap(R::DiffOpRing) = R.DOR
 Base.one(R::DiffOpRing) = R |> unwrap |> one |> DORElem
 Base.zero(R::DiffOpRing) = R |> unwrap |> zero |> DORElem
 
+base_ring(R::DiffOpRing) = R |> unwrap |> base_ring
 function gens(R::DiffOpRing)
 	g = R |> unwrap |> base_ring |> gens
 	g = unwrap(R).(g)
