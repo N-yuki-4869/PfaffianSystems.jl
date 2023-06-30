@@ -49,6 +49,6 @@ export weyl_algebra, DIdeal, intersection, change_ring, coerce
 export gens, dgens, base_ring, nvars
 
 include("DiffOpRings.jl")
-export diff_op_ring
+export diff_op_ring, coerce
 
 end
