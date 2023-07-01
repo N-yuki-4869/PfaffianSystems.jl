@@ -220,6 +220,7 @@ end
 function DIdeal(R::AbstractDORing, gens::Vector{T}) where T <: AbstractDiffOp
     DIdeal{eltype(gens)}(R, gens)
 end
+DIdeal(gens::Vector{T}) where T <: AbstractDiffOp = DIdeal(parent(gens[1]), gens)
 
 base_ring(I::DIdeal) = I.base_ring
 gens(I::DIdeal) = I.gens
@@ -252,7 +253,12 @@ function intersection(I1::DIdeal{T}, I2::DIdeal{T}) where T <: AbstractDiffOp
     var_strs = I1 |> base_ring |> gens .|> string
 
     Dt, v, dv = weyl_algebra([var_strs; ["t1", "t2"]])
-    
+    t = v[end-1:end]
+    dt = dv[end-1:end]
+
+    genJ = [reduce(+, t)-1]
+    append!(genJ, [t[1]*g for g in Dt.(gens(I1))])
+    append!(genJ, [t[2]*g for g in  Dt.(gens(I2))])
 end
 # function intersection(Is::DIdeal{T}...) where T <: AbstractDiffOp
 	# m = length(Is)
