@@ -225,34 +225,34 @@ diff_op_ring(s::AbstractString; kw...) = diff_op_ring(QQ, s; kw...)
 
 
 
-function coerce(x::RatFuncElem, R::Generic.RationalFunctionField, index_map::Dict{<:Integer, <:Integer})
+
+function _coerce_unsafe(x::RatFuncElem, R::Generic.RationalFunctionField, index_map::Dict{<:Integer, <:Integer})
     n = length(index_map)
+    MPoly = R |> zero |> numerator |> parent
     #coercion of numerator
     x_nume = numerator(x)
-    MPoly_nume = R |> zero |> numerator |> parent
-    cezip_nume = zip(coefficients(x_nume), exponent_vectors(x_nume))
-    M_nume = Generic.MPolyBuildCtx(MPoly_nume)
-    for (c,e) in cezip_nume
-        push_term!(M_nume, c, [get(e, index_map[i], 0) for i in 1:n])
-    end
-    coerced_nume = finish(M_nume)
-    @show coerced_nume
-
+    coerced_nume = _coerce_unsafe(x_nume, MPoly, index_map)
+    
     #coercion of denominator
     x_deno = denominator(x)
-    cezip_deno = zip(coefficients(x_deno), exponent_vectors(x_deno))
-    M_deno = Generic.MPolyBuildCtx(MPoly_nume)
-    for (c,e) in cezip_deno
-        push_term!(M_deno, c, [get(e, index_map[i], 0) for i in 1:n])
-    end
-    coerced_deno = finish(M_deno)
-    @show coerced_deno
-
-
+    coerced_deno = _coerce_unsafe(x_deno, MPoly, index_map)
+    
     # return coerced numerator divided ny coerced denominator
 
     return R(coerced_nume) // R(coerced_deno)
 end
+
+function _coerce_unsafe(x::MPolyRingElem, R::Generic.RationalFunctionField, index_map::Dict{Integer, <:Integer})
+    n = length(index_map)
+    MPoly = R |> zero |> numerator |> parent
+    cezip = zip(coefficients(x), exponent_vectors(x))
+    C = Generic.MPolyBuildCtx(MPoly)
+    for (c,e) in cezip
+        push_term!(C, c,[get(e, index_map[i], 0) for i in 1:n] )
+    end
+    return R(finish(C))
+end
+
 
 function coerce(x::DORElem, D::DiffOpRing)
     hom = coercion_homomorphism(parent(x), D)
@@ -267,11 +267,38 @@ function coerce(x::DORElem, D::DiffOpRing)
     cezip = zip(coefficients(unwrap(x)), exponent_vectors(unwrap(x)))
     M = Generic.MPolyBuildCtx(unwrap(D))
 
+    R = base_ring(D)
     for (c,e) in cezip
-        ccezip = zip(coerce(c,), exponent_vectors())
+        coerced_c = _coerce_unsafe(c, R ,index_map)
+        push_term!(M, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
     end
-
-
+    DORElem(finish(M)) 
 end
 
 (D::DiffOpRing)(x::DORElem) = coerce(x, D)
+
+
+
+function coerce(x::WAlgElem, D::DiffOpRing)
+    hom = coercion_homomorphism(parent(x), D) 
+    n = nvars(D)
+
+    # define mapping from index of D to index of parent(x)
+    index_map = Dict{Integer, Integer}()
+    invhom = inv(hom)
+
+    for i = 1:n
+        index_map[i] = get(invhom, i, 0)
+    end
+
+    cezip = zip(coefficients(unwrap(x)), exponent_vectors(unwrap(x)))
+    M = Generic.MPolyBuildCtx(unwrap(D))
+    R = base_ring(D)
+
+    for (c, e) in cezip
+        coerced_c = _coerce_unsafe(c, R, index_map)
+        push_term!(M, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
+    end
+
+    DORElem(finish(M))
+end
