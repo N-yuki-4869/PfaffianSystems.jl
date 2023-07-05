@@ -333,38 +333,36 @@ function coercion_homomorphism(D1::AbstractDORing, D2::AbstractDORing)
     return hom
 end
 
+function _coerce_unsafe(x::MPolyRingElem, M::MPolyRing, index_map::Dict{Integer, <:Integer})
+    n = length(index_map)
+    cezip = zip(coefficients(x), exponent_vectors(x))
+    C = Generic.MPolyBuildCtx(M)
+    for (c,e) in cezip
+        push_term!(C, c,[get(e, index_map[i], 0) for i in 1:n] )
+    end
+    return finish(C)
+end
+
 function coerce(x::WAlgElem, D::WeylAlgebra)
     hom = coercion_homomorphism(parent(x), D) 
     n = nvars(D)
-    @show(n)
+
     # define mapping from index of D to index of parent(x)
     index_map = Dict{Integer, Integer}()
     invhom = inv(hom)
-    @show invhom
+
     for i = 1:n
         index_map[i] = get(invhom, i, 0)
     end
 
     cezip = zip(coefficients(unwrap(x)), exponent_vectors(unwrap(x)))
-    M = Generic.MPolyBuildCtx(unwrap(D))
+    C = Generic.MPolyBuildCtx(unwrap(D))
+    M = base_ring(D)
     for (c, e) in cezip
-
-        # coersion of coefficient
-        @show c, typeof(c), e, typeof(e)
-        ccezip = zip(coefficients(c), exponent_vectors(c))
-        C = Generic.MPolyBuildCtx(base_ring(D))
-        for (cc, ce) in ccezip
-            @show cc, typeof(cc), ce, typeof(ce)
-            push_term!(C, cc, [get(ce, index_map[i], 0) for i in 1:n])
-            @show index_map
-        end
-        coerced_c = finish(C)
-        @show coerced_c
-        @show M
-
-        push_term!(M, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
+        coerced_c = _coerce_unsafe(c, M, index_map)
+        push_term!(C, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
     end
-    WAlgElem(D, finish(M))
+    WAlgElem(D, finish(C))
 end
 
 (D::WeylAlgebra)(x::WAlgElem) = coerce(x, D)
