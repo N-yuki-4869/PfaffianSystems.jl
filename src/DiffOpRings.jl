@@ -11,6 +11,16 @@ const RatFuncElem = Generic.RationalFunctionFieldElem
 
 struct DiffOpRing{T <: MPolyRing{<:RatFuncElem}} <: AbstractDORing
 	DOR::T
+
+    function DiffOpRing(F::Field, s::Vector{Symbol}; kw...)
+        length(s) != length(unique(s)) && throw(ArgumentError("variables must be unique"))
+        ds = Symbol.("d" .* string.(s))
+        R, _ = RationalFunctionField(QQ,"_")
+        raw_D = AbstractAlgebra.polynomial_ring_only(R, ds; kw...)
+        @show raw_D, typeof(raw_D)
+        new{typeof(raw_D)}(raw_D)
+    end
+
 end
 unwrap(R::DiffOpRing) = R.DOR
 
@@ -21,9 +31,14 @@ base_ring(R::DiffOpRing) = R |> unwrap |> base_ring
 function gens(R::DiffOpRing)
 	g = R |> unwrap |> base_ring |> gens
 	g = unwrap(R).(g)
-	return DORElem.(g)
+	return g .|> (s->DORElem.(R, g))
 end
-dgens(R::DiffOpRing) = R |> unwrap |> gens .|> DORElem
+
+function dgens(R::DiffOpRing)
+    dg = R |> unwrap |> gens
+    return dg .|> (s->DORElem(R, s))
+end
+# dgens(R::DiffOpRing) = R |> unwrap |> gens .|> DORElem
 
 nvars(R::DiffOpRing) = R |> unwrap |> nvars
 
@@ -36,12 +51,14 @@ function (R::DiffOpRing)(num::Union{Rational, Integer})
 end
 
 struct DORElem{T <: MPolyRingElem{<:RatFuncElem}} <: AbstractDiffOp
+    parent::DiffOpRing
 	elem::T
 end
 unwrap(wae::DORElem) = wae.elem
 
 
-Base.parent(wae::DORElem) = wae |> unwrap |> parent |> DiffOpRing
+# Base.parent(wae::DORElem) = wae |> unwrap |> parent |> DiffOpRing
+Base.parent(wae::DORElem) = wae.parent
 gens(wae::DORElem) = wae |> parent |> gens
 dgens(wae::DORElem) = wae |> parent |> dgens
 
@@ -49,8 +66,8 @@ function Base.show(io::IO, wae::DORElem)
 	print(io, unwrap(wae))
 end
 
-Base.:+(x::DORElem, y::DORElem) = DORElem(unwrap(x) + unwrap(y))
-Base.:-(x::DORElem, y::DORElem) = DORElem(unwrap(x) - unwrap(y))
+Base.:+(x::DORElem, y::DORElem) = DORElem(parent(x), unwrap(x) + unwrap(y))
+Base.:-(x::DORElem, y::DORElem) = DORElem(parent(x), unwrap(x) - unwrap(y))
 Base.one(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> one |> DORElem
 Base.zero(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> zero |> DORElem
 
@@ -71,7 +88,7 @@ function Base.:*(l::DORElem, r::DORElem)
             ret_dop +=  l_coeffs[i] * Leibniz_rule(l_mons[i],r_coeffs[j]) * r_mons[j]
         end
     end
-    return DORElem(ret_dop)
+    return DORElem(parent(l), ret_dop)
 end
 
 function Base.:^(x::DORElem, y::Integer)
@@ -137,12 +154,12 @@ function Leibniz_rule_1(l_mons::T ,r_coeffs:: U, i::Integer) where {T <: MPolyRi
 end
 
 
-Base.:+(x::Union{Rational, Integer}, y::DORElem) = DORElem(x + unwrap(y))
-Base.:+(x::DORElem, y::Union{Rational, Integer}) = DORElem(unwrap(x) + y)
-Base.:-(x::Union{Rational, Integer}, y::DORElem) = DORElem(x - unwrap(y))
-Base.:-(x::DORElem, y::Union{Rational, Integer}) = DORElem(unwrap(x) - y)
-Base.:*(x::Union{Rational, Integer}, y::DORElem) = DORElem(x * unwrap(y))
-Base.:*(x::DORElem, y::Union{Rational, Integer}) = DORElem(unwrap(x) * y)
+Base.:+(x::Union{Rational, Integer}, y::DORElem) = DORElem(parent(y), x + unwrap(y))
+Base.:+(x::DORElem, y::Union{Rational, Integer}) = DORElem(parent(x), unwrap(x) + y)
+Base.:-(x::Union{Rational, Integer}, y::DORElem) = DORElem(parent(y), x - unwrap(y))
+Base.:-(x::DORElem, y::Union{Rational, Integer}) = DORElem(parent(x), unwrap(x) - y)
+Base.:*(x::Union{Rational, Integer}, y::DORElem) = DORElem(parent(y), x * unwrap(y))
+Base.:*(x::DORElem, y::Union{Rational, Integer}) = DORElem(parent(x), unwrap(x) * y)
 
 Base.://(x::DORElem,y::Union{Rational, Integer}) = x//(parent(x)(y))
 Base.://(x::Union{Rational, Integer},y::DORElem) = (parent(y)(x))//y
@@ -183,7 +200,7 @@ function Base.://(x::DORElem,y::DORElem)
         for i=1:size(x_coeff)[1]
             ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]
         end
-        return DORElem(ret_dop)
+        return DORElem(parent(x), ret_dop)
     end
 end
 
@@ -199,26 +216,28 @@ end
 """
 	Ring of differential operators over rational functions
 """
-function diff_op_ring(F::Field, s::Vector{Symbol}, ds::Vector{Symbol}; kw...)
-	R, gens_R = RationalFunctionField(F, s; kw...)
-	D, gens_D = polynomial_ring(R, ds; kw...)
-    gens_R = D.(gens_R)
-    D = DiffOpRing(D)
-	(D, DORElem.(gens_R), DORElem.(gens_D))
-end
+# function diff_op_ring(F::Field, s::Vector{Symbol}, ds::Vector{Symbol}; kw...)
+# 	R, gens_R = RationalFunctionField(F, s; kw...)
+# 	D, gens_D = polynomial_ring(R, ds; kw...)
+#     gens_R = D.(gens_R)
+#     D = DiffOpRing(D)
+# 	(D, DORElem.(gens_R), DORElem.(gens_D))
+# end
 
-function diff_op_ring(F::Field, s::Symbol, ds::Symbol; kw...)
-    D, x, dx = diff_op_ring(F, [s], [ds]; kw...)
-    return D, x[1], dx[1]
-end
+# function diff_op_ring(F::Field, s::Symbol, ds::Symbol; kw...)
+#     D, x, dx = diff_op_ring(F, [s], [ds]; kw...)
+#     return D, x[1], dx[1]
+# end
 
 function diff_op_ring(F::Field, s::AbstractVector{<:AbstractString}; kw...)
-	diff_op_ring(F, Symbol.(s), Symbol.("d".*s); kw...)
+	D = DiffOpRing(F, Symbol.(s))
+    return D, gens(D), dgens(D)
 end
 diff_op_ring(s::AbstractVector{<:AbstractString}; kw...) = diff_op_ring(QQ, s; kw...)
 
 function diff_op_ring(F::Field, s::AbstractString; kw...)
-    diff_op_ring(F, Symbol(s), Symbol("d"*s); kw...)
+    D = DiffOpRing(F, [Symbol(s)])
+    return D, gens(D)[1], dgens(D)[1]
 end
 diff_op_ring(s::AbstractString; kw...) = diff_op_ring(QQ, s; kw...)
 
@@ -272,7 +291,7 @@ function coerce(x::DORElem, D::DiffOpRing)
         coerced_c = _coerce_unsafe(c, R ,index_map)
         push_term!(M, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
     end
-    DORElem(finish(M)) 
+    DORElem(D, finish(M)) 
 end
 
 (D::DiffOpRing)(x::DORElem) = coerce(x, D)
@@ -300,5 +319,5 @@ function coerce(x::WAlgElem, D::DiffOpRing)
         push_term!(M, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
     end
 
-    DORElem(finish(M))
+    DORElem(D, finish(M))
 end
