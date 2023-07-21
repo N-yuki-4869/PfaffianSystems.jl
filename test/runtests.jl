@@ -178,6 +178,24 @@ end
     @test isequal(dx*dy*dz*x*y*z, x*y*z*dx*dy*dz+x*y*dx*dy+x*z*dx*dz+y*z*dy*dz+x*dx+y*dy+z*dz+1)
 end
 
+@testset "WeylAlgebra.jl" begin
+    D1, x, dx = weyl_algebra("x")
+    D2, (x1, y1), (dx1, dy1) = weyl_algebra(["x", "y"])
+    @test isequal(coerce(dx*x+1, D2) |> parent, D2)
+end
+
+@testset "DiffOpRing,jl" begin
+    D1, x, dx = weyl_algebra("x")
+    D2, (x1, y1), (dx1, dy1) = diff_op_ring(["x", "y"])
+    @test isequal(coerce(dx*x+1, D2) |> parent, D2)    
+end
+
+@testset "DiffOpRing,jl" begin
+    D1, x, dx = diff_op_ring("x")
+    D2, (x1, y1), (dx1, dy1) = diff_op_ring(["x", "y"])
+    @test isequal(coerce(dx*x+1, D2) |> parent, D2)    
+end
+
 @testset "DiffOpRings.jl" begin
     D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
     @test isequal((x//(x+1)*dx*((x^2+1)//x))*dx, (x^2+1)//(x+1)*dx^2+(x-1)//x*dx)
