@@ -19,7 +19,7 @@ using Bijections
 # using Symbolics: scalarize
 using Base: @invokelatest
 using AbstractAlgebra
-import AbstractAlgebra: nvars, gens, base_ring, intersection, derivative
+import AbstractAlgebra: nvars, gens, base_ring, intersection, derivative, vars
 const AA = AbstractAlgebra
 function Bijection{S, T}(dict::AbstractDict{S, T}) where S where T
 	return Bijection(dict)
@@ -46,7 +46,7 @@ abstract type AbstractDORing end
 
 include("WeylAlgebra.jl")
 export weyl_algebra, DIdeal, intersection, change_ring, coerce
-export gens, dgens, base_ring, nvars
+export gens, dgens, base_ring, nvars, vars, dvars
 
 include("DiffOpRings.jl")
 export diff_op_ring, coerce
