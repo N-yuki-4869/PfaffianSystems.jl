@@ -68,6 +68,22 @@ Base.:-(x::WAlgElem{T}, y::WAlgElem{T}) where T <: MPolyRingElem = WAlgElem{T}(p
 Base.one(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> one |> WAlgElem
 Base.zero(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> zero |> WAlgElem
 
+function vars(wae::WAlgElem)
+    wae_coeffs = wae |> unwrap |> coefficients
+    set = Set()
+    for c in wae_coeffs
+        c_var = Set(vars(c))
+        set = union(set, c_var)
+    end
+    return set
+end
+
+function dvars(wae::WAlgElem)
+    return vars(unwrap(wae))
+end
+
+
+Base.:(==)(x::WeylAlgebra, y::WeylAlgebra) = unwrap(x) == unwrap(y)
 Base.:(==)(x::WAlgElem{T}, y::WAlgElem{T}) where T <: MPolyRingElem = unwrap(x) == unwrap(y)
 
 # TODO: multiplication of WAlgElem
