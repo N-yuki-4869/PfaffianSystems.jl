@@ -47,7 +47,7 @@ function Base.show(io::IO, R::DiffOpRing)
 end
 
 function (R::DiffOpRing)(num::Union{Rational, Integer})
-    unwrap(R)(num) |> DORElem
+    DORElem(R, unwrap(R)(num))
 end
 
 struct DORElem{T <: MPolyRingElem{<:RatFuncElem}} <: AbstractDiffOp
@@ -71,6 +71,22 @@ Base.:-(x::DORElem, y::DORElem) = DORElem(parent(x), unwrap(x) - unwrap(y))
 Base.one(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> one |> DORElem
 Base.zero(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> zero |> DORElem
 
+function vars(wae::DORElem)
+    wae_coeffs = wae |> unwrap |> coefficients |> collect
+    wae_size = wae_coeffs |> size
+    
+    c_nume = numerator(wae_coeffs)
+    c_deno = denominator(wae_coeffs)
+    @show c_nume, c_deno
+
+    return 
+end
+
+function dvars(wae::DORElem)
+    return vars(unwrap(wae))
+end
+
+Base.:(==)(x::DiffOpRing, y::DiffOpRing) = unwrap(x) == unwrap(y)
 Base.:(==)(x::DORElem, y::DORElem) = unwrap(x) == unwrap(y)
 
 
