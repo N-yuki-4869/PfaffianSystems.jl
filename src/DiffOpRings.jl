@@ -15,7 +15,7 @@ struct DiffOpRing{T <: MPolyRing{<:RatFuncElem}} <: AbstractDORing
     function DiffOpRing(F::Field, s::Vector{Symbol}; kw...)
         length(s) != length(unique(s)) && throw(ArgumentError("variables must be unique"))
         ds = Symbol.("d" .* string.(s))
-        R, _ = RationalFunctionField(QQ,"_")
+        R, _ = RationalFunctionField(QQ, string.(s))
         raw_D = AbstractAlgebra.polynomial_ring_only(R, ds; kw...)
         @show raw_D, typeof(raw_D)
         new{typeof(raw_D)}(raw_D)
@@ -31,7 +31,7 @@ base_ring(R::DiffOpRing) = R |> unwrap |> base_ring
 function gens(R::DiffOpRing)
 	g = R |> unwrap |> base_ring |> gens
 	g = unwrap(R).(g)
-	return g .|> (s->DORElem.(R, g))
+	return g .|> (s->DORElem(R, s))
 end
 
 function dgens(R::DiffOpRing)
@@ -261,7 +261,7 @@ function _coerce_unsafe(x::RatFuncElem, R::Generic.RationalFunctionField, index_
     return R(coerced_nume) // R(coerced_deno)
 end
 
-function _coerce_unsafe(x::MPolyRingElem, R::Generic.RationalFunctionField, index_map::Dict{Integer, <:Integer})
+function _coerce_unsafe(x::MPolyRingElem, R::Generic.RationalFunctionField, index_map::Dict{<:Integer, <:Integer})
     n = length(index_map)
     MPoly = R |> zero |> numerator |> parent
     cezip = zip(coefficients(x), exponent_vectors(x))
@@ -293,8 +293,7 @@ function coerce(x::DORElem, D::DiffOpRing)
     end
     DORElem(D, finish(M)) 
 end
-
-(D::DiffOpRing)(x::DORElem) = coerce(x, D)
+(R::DiffOpRing)(x::DORElem) = coerce(x, R)
 
 
 
@@ -321,3 +320,4 @@ function coerce(x::WAlgElem, D::DiffOpRing)
 
     DORElem(D, finish(M))
 end
+(R::DiffOpRing)(x::WAlgElem) = coerce(x, R)
