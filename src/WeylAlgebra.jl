@@ -63,24 +63,52 @@ function Base.show(io::IO, wae::WAlgElem)
 	show(io, unwrap(wae))
 end
 
-Base.:+(x::WAlgElem{T}, y::WAlgElem{T}) where T <: MPolyRingElem = WAlgElem{T}(parent(x), unwrap(x) + unwrap(y))
-Base.:-(x::WAlgElem{T}, y::WAlgElem{T}) where T <: MPolyRingElem = WAlgElem{T}(parent(x), unwrap(x) - unwrap(y))
+# Base.:+(x::WAlgElem{T}, y::WAlgElem{T}) where T <: MPolyRingElem = WAlgElem{T}(parent(x), unwrap(x) + unwrap(y))
+Base.:+(x::T, y::T) where T <: AbstractDiffOp = T(parent(x), unwrap(x) + unwrap(y))
+# Base.:-(x::WAlgElem{T}, y::WAlgElem{T}) where T <: MPolyRingElem = WAlgElem{T}(parent(x), unwrap(x) - unwrap(y))
+Base.:-(x::T, y::T) where T <: AbstractDiffOp = T(parent(x), unwrap(x) - unwrap(y))
 Base.one(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> one |> WAlgElem
 Base.zero(wae::Union{Type{WAlgElem{T}}, WAlgElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> zero |> WAlgElem
 
 function vars(wae::WAlgElem)
     wae_coeffs = wae |> unwrap |> coefficients
-    set = Set()
+    set = Set{typeof(wae)}()
     for c in wae_coeffs
-        c_var = Set(vars(c))
-        set = union(set, c_var)
+        c_vars = vars(c)
+        c_vars = unwrap(parent(wae)).(c_vars)
+        c_vars = c_vars .|> (s->WAlgElem(parent(wae), s))
+        set = union(set, c_vars)
+
     end
-    return set
+    wae_vars = collect(set)
+    
+    re_wae_vars = Vector{typeof(wae)}()
+    for i in gens(wae)
+        if i in wae_vars
+            push!(re_wae_vars, i)
+        end
+    end
+
+    return re_wae_vars
 end
 
 function dvars(wae::WAlgElem)
-    return vars(unwrap(wae))
+    v = vars(unwrap(wae))
+    wae_dvars = collect(Set(v .|> (s->WAlgElem(parent(wae), s))))
+
+    re_wae_dvars = Vector{typeof(wae)}()
+    for i in dgens(wae)
+        if i in wae_dvars
+            push!(re_wae_dvars, i)
+        end
+    end
+
+    return re_wae_dvars
 end
+
+# function dvars(wae::T) where T <: AbstractDiffOp
+#     return Set(vars(unwrap(wae)))    
+# end
 
 
 Base.:(==)(x::WeylAlgebra, y::WeylAlgebra) = unwrap(x) == unwrap(y)
