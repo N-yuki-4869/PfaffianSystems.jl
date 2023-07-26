@@ -17,7 +17,6 @@ struct DiffOpRing{T <: MPolyRing{<:RatFuncElem}} <: AbstractDORing
         ds = Symbol.("d" .* string.(s))
         R, _ = RationalFunctionField(QQ, string.(s))
         raw_D = AbstractAlgebra.polynomial_ring_only(R, ds; kw...)
-        @show raw_D, typeof(raw_D)
         new{typeof(raw_D)}(raw_D)
     end
 
@@ -66,24 +65,52 @@ function Base.show(io::IO, wae::DORElem)
 	print(io, unwrap(wae))
 end
 
-Base.:+(x::DORElem, y::DORElem) = DORElem(parent(x), unwrap(x) + unwrap(y))
-Base.:-(x::DORElem, y::DORElem) = DORElem(parent(x), unwrap(x) - unwrap(y))
+# Base.:+(x::DORElem, y::DORElem) = DORElem(parent(x), unwrap(x) + unwrap(y))
+# Base.:-(x::DORElem, y::DORElem) = DORElem(parent(x), unwrap(x) - unwrap(y))
 Base.one(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> one |> DORElem
 Base.zero(wae::Union{Type{DORElem{T}}, DORElem{T}}) where T <: MPolyRingElem = wae |> unwrap |> zero |> DORElem
 
 function vars(wae::DORElem)
     wae_coeffs = wae |> unwrap |> coefficients |> collect
-    wae_size = wae_coeffs |> size
-    
-    c_nume = numerator(wae_coeffs)
-    c_deno = denominator(wae_coeffs)
-    @show c_nume, c_deno
+    set = Set{typeof(wae)}()
+    for c in wae_coeffs
+        c_nume = numerator(c)
+        c_nume_vars = vars(c_nume)
+        c_nume_vars = unwrap(parent(wae)).(c_nume_vars)
+        c_nume_vars = c_nume_vars .|> (s->DORElem(parent(wae), s))
+        set = union(set, c_nume_vars)
 
-    return 
+        c_deno = denominator(c)
+        c_deno_vars = vars(c_deno)
+        c_deno_vars = unwrap(parent(wae)).(c_deno_vars)
+        c_deno_vars = c_deno_vars .|> (s->DORElem(parent(wae), s))
+        set = union(set, c_deno_vars)
+    end
+    wae_vars = collect(set)
+
+    re_wae_vars = Vector{typeof(wae)}()
+    for i in gens(wae)
+        if i in wae_vars
+            push!(re_wae_vars, i)
+        end
+    end
+
+
+    return re_wae_vars
 end
 
 function dvars(wae::DORElem)
-    return vars(unwrap(wae))
+    v = vars(unwrap(wae))
+    wae_dvars = collect(Set(v .|> (s->DORElem(parent(wae), s))))
+
+    re_wae_dvars = Vector{typeof(wae)}()
+    for i in dgens(wae)
+        if i in wae_dvars
+            push!(re_wae_dvars, i)
+        end
+    end
+
+    return re_wae_dvars
 end
 
 Base.:(==)(x::DiffOpRing, y::DiffOpRing) = unwrap(x) == unwrap(y)
