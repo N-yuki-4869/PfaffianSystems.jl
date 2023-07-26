@@ -184,13 +184,13 @@ end
     @test isequal(coerce(dx*x+1, D2) |> parent, D2)
 end
 
-@testset "DiffOpRing,jl" begin
+@testset "DiffOpRing.jl" begin
     D1, x, dx = weyl_algebra("x")
     D2, (x1, y1), (dx1, dy1) = diff_op_ring(["x", "y"])
     @test isequal(coerce(dx*x+1, D2) |> parent, D2)    
 end
 
-@testset "DiffOpRing,jl" begin
+@testset "DiffOpRing.jl" begin
     D1, x, dx = diff_op_ring("x")
     D2, (x1, y1), (dx1, dy1) = diff_op_ring(["x", "y"])
     @test isequal(coerce(dx*x+1, D2) |> parent, D2)    
@@ -201,3 +201,27 @@ end
     @test isequal((x//(x+1)*dx*((x^2+1)//x))*dx, (x^2+1)//(x+1)*dx^2+(x-1)//x*dx)
     @test isequal(x//(x+1)*dx^2*((x^2+1)//x), (x^2+1)//(x+1)*dx^2+(2*x-2)//x*dx+2//(x^3+x^2))
 end
+
+@testset "WeylAlgebra.jl" begin
+    D, (x,y), (dx,dy) = weyl_algebra(["x", "y"])
+    @test isequal(vars(x*dx), vars(x))
+end
+
+
+@testset "WeylAlgebra.jl" begin
+    D, (x,y), (dx,dy) = weyl_algebra(["x", "y"])
+    @test isequal(dvars(x*dx), dvars(dx))
+end
+
+@testset "DiffOpRing.jl" begin
+    D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
+    @test isequal(vars(x//y*dx), vars(x+y))
+end
+
+
+@testset "DiffOpRing.jl" begin
+    D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
+    @test isequal(dvars(x//y*dx), dvars(dx))
+end
+
+
