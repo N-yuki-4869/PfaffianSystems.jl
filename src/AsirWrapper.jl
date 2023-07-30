@@ -28,9 +28,10 @@ end
 Return a string consiting of all elements of `v` with delimiter `delim`. 
 """
 vec2str(v::AbstractVector; delim=",") = string.(v) |> (s->join(s, delim))
-vec2str(v::Vector{Num}; delim=",") = string.(v) .|> removeSqBra .|> add_ast |> (s->join(s, delim))
-vec2str(v::Symbolics.Arr; delim=",") = vec2str(v |> scalarize; delim=delim)
-vec2str(v::OrderedSet{Num}; delim=",") = vec2str(v |> collect; delim=delim)
+# vec2str(v::Vector{Num}; delim=",") = string.(v) .|> removeSqBra .|> add_ast |> (s->join(s, delim))
+# vec2str(v::Symbolics.Arr; delim=",") = vec2str(v |> scalarize; delim=delim)
+# vec2str(v::OrderedSet{Num}; delim=",") = vec2str(v |> collect; delim=delim)
+vec2str(v::AbstractDiffOp; delim=",") = string(v)
 function vec2str(vs...; delim=",")
 	strs = Vector{String}()
 	for v in vs
@@ -110,112 +111,122 @@ function parseAsir(asir_res::AbstractString)
 	return asir_res |> (s->split(s, "\n")) .|> slash2Dslash
 end
 
-function evalAsir(asir_res::AbstractString, vars_list::Vector{Num})
+function evalAsir(asir_res::AbstractString, vars_list::Vector{<:AbstractDiffOp})
 	tmpExpr = Meta.parse("asir_tmpFunc($(vec2str(vars_list))) = $(asir_res)")
 	try
 		eval(tmpExpr)
 	catch
 		@assert false "Error: somthing wrong in evaluating $(asir_res)"
 	end
-	# return Base.invokelatest(asir_tmpFunc, vars_list...)
-	return (@invokelatest asir_tmpFunc(vars_list...)) .|> Num
+	return (@invokelatest asir_tmpFunc(vars_list...))
 end
 
-function asir_derivative(sym::Num, var::Num; errMsg=ASIR_DEBUG)
-	vars_list = get_variables(sym) .|> Num
-	asir_cmd = "diff($sym, $var);"
-	# """
-	# diff($sym, $var);
-	# """
-	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
-	return evalAsir(asir_res[1], vars_list)
-end
-# asir_derivative(syms::AbstractArray{Num}, var::Num; errMsg=false) = asir_derivative.(syms, var; errMsg=errMsg)
-asir_derivative(syms::AbstractVector{Num}, var::Num; errMsg=ASIR_DEBUG) = asir_derivative(syms[:, :], var; errMsg=errMsg)[:]
-function asir_derivative(syms::AbstractMatrix{Num}, var::Num; errMsg=ASIR_DEBUG)
-	vars_mat = get_variables.(syms)
-	n, m = size(syms)
-	retMat = Matrix{Num}(undef, n, m)
-	redIndcs = Vector(undef, 0)
-	sizehint!(redIndcs, n*m)
+# function evalAsir(asir_res::AbstractString, vars_list::Vector{Num})
+# 	tmpExpr = Meta.parse("asir_tmpFunc($(vec2str(vars_list))) = $(asir_res)")
+# 	try
+# 		eval(tmpExpr)
+# 	catch
+# 		@assert false "Error: somthing wrong in evaluating $(asir_res)"
+# 	end
+# 	# return Base.invokelatest(asir_tmpFunc, vars_list...)
+# 	return (@invokelatest asir_tmpFunc(vars_list...)) .|> Num
+# end
 
-	asir_cmd = ""
-	for i = 1:n
-		for j = 1:m
-			if isempty(vars_mat[i, j])
-				retMat[i, j] = Num(0)
-			else
-				push!(redIndcs, (i, j))
-				asir_cmd *= "diff($(syms[i, j]), $var);\n"
-			end
-		end
-	end
-	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
+# function asir_derivative(sym::Num, var::Num; errMsg=ASIR_DEBUG)
+# 	vars_list = get_variables(sym) .|> Num
+# 	asir_cmd = "diff($sym, $var);"
+# 	# """
+# 	# diff($sym, $var);
+# 	# """
+# 	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
+# 	return evalAsir(asir_res[1], vars_list)
+# end
+# # asir_derivative(syms::AbstractArray{Num}, var::Num; errMsg=false) = asir_derivative.(syms, var; errMsg=errMsg)
+# asir_derivative(syms::AbstractVector{Num}, var::Num; errMsg=ASIR_DEBUG) = asir_derivative(syms[:, :], var; errMsg=errMsg)[:]
+# function asir_derivative(syms::AbstractMatrix{Num}, var::Num; errMsg=ASIR_DEBUG)
+# 	vars_mat = get_variables.(syms)
+# 	n, m = size(syms)
+# 	retMat = Matrix{Num}(undef, n, m)
+# 	redIndcs = Vector(undef, 0)
+# 	sizehint!(redIndcs, n*m)
 
-	(length(asir_res) != length(redIndcs)+1) && return nothing
+# 	asir_cmd = ""
+# 	for i = 1:n
+# 		for j = 1:m
+# 			if isempty(vars_mat[i, j])
+# 				retMat[i, j] = Num(0)
+# 			else
+# 				push!(redIndcs, (i, j))
+# 				asir_cmd *= "diff($(syms[i, j]), $var);\n"
+# 			end
+# 		end
+# 	end
+# 	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
 
-	for (idx, (i, j)) in enumerate(redIndcs)
-		retMat[i, j] = evalAsir(asir_res[idx], vars_mat[i, j] .|> Num)
-	end
-	return retMat
-end
+# 	(length(asir_res) != length(redIndcs)+1) && return nothing
 
-rm_den(s::Rational) = s.den == 1 ? s.num : s
-rm_den(s) = (isdiv(s) && s.den === 1) ? s.num : s
-function asir_reduce(sym::Num; errMsg=ASIR_DEBUG)
-	vars_list = get_variables(sym) .|> Num
-	asir_cmd = "red($sym);"
-	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
-	return evalAsir(asir_res[1], vars_list) |> rm_den
-end
-asir_reduce(syms::AbstractVector{Num}; errMsg=ASIR_DEBUG) = asir_reduce(syms[:, :]; errMsg=errMsg)[:]
-function asir_reduce(syms::AbstractMatrix{Num}; errMsg=ASIR_DEBUG)
-	# vars_list = get_variables.(syms[:]) .|> Set |> (s->union(s...)) |> collect
-	vars_mat = get_variables.(syms)
-	n, m = size(syms)
-	retMat = Matrix{Num}(undef, n, m)
-	redIndcs = Vector(undef, 0)
-	sizehint!(redIndcs, n*m)
+# 	for (idx, (i, j)) in enumerate(redIndcs)
+# 		retMat[i, j] = evalAsir(asir_res[idx], vars_mat[i, j] .|> Num)
+# 	end
+# 	return retMat
+# end
 
-	asir_cmd = ""
-	for i = 1:n
-		for j = 1:m
-			if isempty(vars_mat[i, j])
-				retMat[i, j] = syms[i, j]
-			else
-				push!(redIndcs, (i, j))
-				asir_cmd *= "red($(syms[i, j]));\n"
-			end
-		end
-	end
-	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
+# rm_den(s::Rational) = s.den == 1 ? s.num : s
+# rm_den(s) = (isdiv(s) && s.den === 1) ? s.num : s
+# function asir_reduce(sym::Num; errMsg=ASIR_DEBUG)
+# 	vars_list = get_variables(sym) .|> Num
+# 	asir_cmd = "red($sym);"
+# 	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
+# 	return evalAsir(asir_res[1], vars_list) |> rm_den
+# end
+# asir_reduce(syms::AbstractVector{Num}; errMsg=ASIR_DEBUG) = asir_reduce(syms[:, :]; errMsg=errMsg)[:]
+# function asir_reduce(syms::AbstractMatrix{Num}; errMsg=ASIR_DEBUG)
+# 	# vars_list = get_variables.(syms[:]) .|> Set |> (s->union(s...)) |> collect
+# 	vars_mat = get_variables.(syms)
+# 	n, m = size(syms)
+# 	retMat = Matrix{Num}(undef, n, m)
+# 	redIndcs = Vector(undef, 0)
+# 	sizehint!(redIndcs, n*m)
 
-	(length(asir_res) != length(redIndcs)+1) && return nothing
+# 	asir_cmd = ""
+# 	for i = 1:n
+# 		for j = 1:m
+# 			if isempty(vars_mat[i, j])
+# 				retMat[i, j] = syms[i, j]
+# 			else
+# 				push!(redIndcs, (i, j))
+# 				asir_cmd *= "red($(syms[i, j]));\n"
+# 			end
+# 		end
+# 	end
+# 	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
 
-	for (idx, (i, j)) in enumerate(redIndcs)
-		retMat[i, j] = evalAsir(asir_res[idx], vars_mat[i, j] .|> Num)
-	end
-	return retMat .|> rm_den
-	# for i = 1:n
-	# 	retMatTrans[:, i] = evalAsir(asir_res[i], vars_list)
-	# end
-end
+# 	(length(asir_res) != length(redIndcs)+1) && return nothing
 
-function asir_fctr(sym::Num; errMsg=ASIR_DEBUG)
-	vars_list = get_variables(sym) .|> Num
-	asir_cmd = 
-	"""
-	F = fctr($sym)\$
-	for (I=0; I<length(F); I++){
-		print(F[I]);
-	}
-	"""
-	# "fctr($sym)\$"
-	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
-	filter!(s->!isempty(s), asir_res) 
+# 	for (idx, (i, j)) in enumerate(redIndcs)
+# 		retMat[i, j] = evalAsir(asir_res[idx], vars_mat[i, j] .|> Num)
+# 	end
+# 	return retMat .|> rm_den
+# 	# for i = 1:n
+# 	# 	retMatTrans[:, i] = evalAsir(asir_res[i], vars_list)
+# 	# end
+# end
 
-	map(asir_res) do res
-		evalAsir(res, vars_list) |> (s->s[1]=>s[2])
-	end
-	# return evalAsir(asir_res[1], vars_list) |> rm_den
-end
+# function asir_fctr(sym::Num; errMsg=ASIR_DEBUG)
+# 	vars_list = get_variables(sym) .|> Num
+# 	asir_cmd = 
+# 	"""
+# 	F = fctr($sym)\$
+# 	for (I=0; I<length(F); I++){
+# 		print(F[I]);
+# 	}
+# 	"""
+# 	# "fctr($sym)\$"
+# 	asir_res = runAsir(asir_cmd; errMsg=errMsg) |> parseAsir
+# 	filter!(s->!isempty(s), asir_res) 
+
+# 	map(asir_res) do res
+# 		evalAsir(res, vars_list) |> (s->s[1]=>s[2])
+# 	end
+# 	# return evalAsir(asir_res[1], vars_list) |> rm_den
+# end

@@ -1,8 +1,8 @@
 module PfaffianSystems
 
 import Base: sort
-import AbstractAlgebra: nvars, gens, base_ring, intersection, derivative, vars
-import Base: ==, parent
+import AbstractAlgebra: nvars, gens, base_ring, derivative, vars
+import Base: ==, hash, parent
 
 # Write your package code here.
 using Bijections
@@ -35,10 +35,11 @@ end
 abstract type AbstractDiffOp end
 abstract type AbstractDORing end
 
-# include("AsirWrapper.jl")
-# export isAsirAvailable, vec2str, asir_derivative, asir_reduce, asir_fctr
+include("AsirWrapper.jl")
+export isAsirAvailable, vec2str, asir_derivative, asir_reduce, asir_fctr
 
 include("DiffOps.jl")
+export gens, dgens, base_ring, nvars, vars, dvars
 # export genVars, addVars, apply_do, dmul
 
 # include("DIdeals.jl")
@@ -49,8 +50,7 @@ include("DiffOps.jl")
 # export PfaffianSystem, get_vars, get_dvars, buildFuncA, integratePf, applyStdMons, denomLCM
 
 include("WeylAlgebra.jl")
-export weyl_algebra, DIdeal, intersection, change_ring, coerce
-export gens, dgens, base_ring, nvars, vars, dvars
+export weyl_algebra, DIdeal, Dintersection, coerce
 
 include("DiffOpRings.jl")
 export diff_op_ring, coerce

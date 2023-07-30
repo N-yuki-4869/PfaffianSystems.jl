@@ -117,6 +117,7 @@ end
 ############################################################
 
 Base.:(==)(x::T, y::T) where T <: AbstractDiffOp  = unwrap(x) == unwrap(y)
+Base.hash(x::T, h::UInt) where T <: AbstractDiffOp = hash(unwrap(x), h)
 
 Base.:+(x::Union{Rational, Integer}, y::T) where T <: AbstractDiffOp  = T(parent(y), x + unwrap(y))
 Base.:+(x::T, y::Union{Rational, Integer}) where T <: AbstractDiffOp = T(parent(x), unwrap(x) + y)
