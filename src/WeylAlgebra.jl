@@ -20,9 +20,12 @@ struct WeylAlgebra{T <: MPolyRing{<:MPolyRingElem}} <: AbstractDORing
     end
 end
 unwrap(D::WeylAlgebra) = D.WAlg
+(D::WeylAlgebra)(num::Union{Rational, Integer}) = WAlgElem(D, unwrap(D)(num))
 
-Base.one(D::WeylAlgebra) = D |> unwrap |> one |> WAlgElem
-Base.zero(D::WeylAlgebra) = D |> unwrap |> zero |> WAlgElem
+# Base.one(D::WeylAlgebra) = D |> unwrap |> one |> WAlgElem
+# Base.zero(D::WeylAlgebra) = D |> unwrap |> zero |> WAlgElem
+Base.one(D::T) where T <: AbstractDORing = D(1)
+Base.zero(D::T) where T <: AbstractDORing = D(0)
 
 base_ring(D::WeylAlgebra) = D |> unwrap |> base_ring
 function gens(D::WeylAlgebra)

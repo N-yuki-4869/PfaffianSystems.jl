@@ -19,9 +19,10 @@ struct DiffOpRing{T <: MPolyRing{<:RatFuncElem}} <: AbstractDORing
 
 end
 unwrap(R::DiffOpRing) = R.DOR
+(R::DiffOpRing)(num::Union{Rational, Integer}) = DORElem(R, unwrap(R)(num))
 
-Base.one(R::DiffOpRing) = R |> unwrap |> one |> DORElem
-Base.zero(R::DiffOpRing) = R |> unwrap |> zero |> DORElem
+# Base.one(R::DiffOpRing) = R |> unwrap |> one |> DORElem
+# Base.zero(R::DiffOpRing) = R |> unwrap |> zero |> DORElem
 
 base_ring(R::DiffOpRing) = R |> unwrap |> base_ring
 function gens(R::DiffOpRing)
@@ -42,9 +43,9 @@ function Base.show(io::IO, R::DiffOpRing)
 	print(io, nvars(R), "-dimensional ring of differential opeartors in [$(join(string.(gens(R)), ","))]")
 end
 
-function (R::DiffOpRing)(num::Union{Rational, Integer})
-    DORElem(R, unwrap(R)(num))
-end
+# function (R::DiffOpRing)(num::Union{Rational, Integer})
+#     DORElem(R, unwrap(R)(num))
+# end
 
 struct DORElem{T <: MPolyRingElem{<:RatFuncElem}} <: AbstractDiffOp
     parent::DiffOpRing

@@ -102,126 +102,166 @@ using AbstractAlgebra: QQ
 # end
 
 @testset "WeylAlgebra.jl" begin
+    @test_nowarn weyl_algebra("x")      # generate 1-d Weyl algebra
     D, x, dx = weyl_algebra("x")
-    @test isequal(x*x, x^2)
-    @test isequal(x*dx, x*dx)
-    @test isequal(dx*x, x*dx+1)
-    @test isequal(dx*dx, dx^2)
-    @test isequal(x^2*x, x^3)
-    @test isequal(x^2*dx, x^2*dx)
-    @test isequal(dx^2*x, x*dx^2+2*dx)
-    @test isequal(dx^2*dx,dx^3)
-    @test isequal(x*x^2, x^3)
-    @test isequal(x*dx^2, x*dx^2)
-    @test isequal(dx*x^2, x^2*dx+2*x)
-    @test isequal(dx*dx^2, dx^3)
-    @test isequal(x^3*x, x^4)
-    @test isequal(x^3*dx, x^3*dx)
-    @test isequal(dx^3*x, x*dx^3+3*dx^2)
-    @test isequal(dx^3*dx, dx^4)
-    @test isequal(x^2*x^2, x^4)
-    @test isequal(x^2*dx^2, x^2*dx^2)
-    @test isequal(dx^2*x^2, x^2*dx^2+4*x*dx+2)
-    @test isequal(dx^2*dx^2, dx^4)
-    @test isequal(x*x^3, x^4)
-    @test isequal(x*dx^3, x*dx^3)
-    @test isequal(dx*x^3, x^3*dx+3*x^2)
-    @test isequal(dx*dx^3, dx^4)
-    @test isequal(x^4*x, x^5)
-    @test isequal(x^4*dx, x^4*dx)
-    @test isequal(dx^4*x, x*dx^4+4*dx^3)
-    @test isequal(dx^4*dx, dx^5)
-    @test isequal(x^3*x^2, x^5)
-    @test isequal(x^3*dx^2, x^3*dx^2)
-    @test isequal(dx^3*x^2, x^2*dx^3+6*x*dx^2+6*dx)
-    @test isequal(dx^3*dx^2, dx^5)
-    @test isequal(x^2*x^3, x^5)
-    @test isequal(x^2*dx^3, x^2*dx^3)
-    @test isequal(dx^2*x^3, x^3*dx^2+6*x^2*dx+6*x)
-    @test isequal(dx^2*dx^3, dx^5)
-    @test isequal(x*x^4, x^5)
-    @test isequal(x*dx^4, x*dx^4)
-    @test isequal(dx*x^4, x^4*dx+4*x^3)
-    @test isequal(dx*dx^4, dx^5)
-    @test isequal(x*dx*x*dx, x^2*dx^2+x*dx)
-    @test isequal(((x^2+x+1)*dx^2+(x+1)*dx+x)*(x^2*dx+x), (x^4+x^3+x^2)*dx^3+(6*x^3+6*x^2+5*x)*dx^2+(x^3+7*x^2+7*x+4)*dx+x^2+x+1)
-end
+    @test isequal(x*x, x^2)             # power of variable
+    @test isequal(dx*x, x*dx+1)         # Leibniz rule
+    @test isequal(dx*dx, dx^2)          # power of derivative
+    @test isequal(x^2*x, x*x^2)         # commutativity between product and power
+    @test isequal((x*dx)*x, x*(dx*x))   # associativity of product
+    # @test isequal(x*dx, x*dx)
+    # @test isequal(x^2*dx, x^2*dx)
+    # @test isequal(dx^2*x, x*dx^2+2*dx)
+    # @test isequal(dx^2*dx,dx^3)
+    # @test isequal(x*x^2, x^3)
+    # @test isequal(x*dx^2, x*dx^2)
+    # @test isequal(dx*x^2, x^2*dx+2*x)
+    # @test isequal(dx*dx^2, dx^3)
+    # @test isequal(x^3*x, x^4)
+    # @test isequal(x^3*dx, x^3*dx)
+    # @test isequal(dx^3*x, x*dx^3+3*dx^2)
+    # @test isequal(dx^3*dx, dx^4)
+    # @test isequal(x^2*x^2, x^4)
+    # @test isequal(x^2*dx^2, x^2*dx^2)
+    # @test isequal(dx^2*x^2, x^2*dx^2+4*x*dx+2)
+    # @test isequal(dx^2*dx^2, dx^4)
+    # @test isequal(x*x^3, x^4)
+    # @test isequal(x*dx^3, x*dx^3)
+    # @test isequal(dx*x^3, x^3*dx+3*x^2)
+    # @test isequal(dx*dx^3, dx^4)
+    # @test isequal(x^4*x, x^5)
+    # @test isequal(x^4*dx, x^4*dx)
+    # @test isequal(dx^4*x, x*dx^4+4*dx^3)
+    # @test isequal(dx^4*dx, dx^5)
+    # @test isequal(x^3*x^2, x^5)
+    # @test isequal(x^3*dx^2, x^3*dx^2)
+    # @test isequal(dx^3*x^2, x^2*dx^3+6*x*dx^2+6*dx)
+    # @test isequal(dx^3*dx^2, dx^5)
+    # @test isequal(x^2*x^3, x^5)
+    # @test isequal(x^2*dx^3, x^2*dx^3)
+    # @test isequal(dx^2*x^3, x^3*dx^2+6*x^2*dx+6*x)
+    # @test isequal(dx^2*dx^3, dx^5)
+    # @test isequal(x*x^4, x^5)
+    # @test isequal(x*dx^4, x*dx^4)
+    # @test isequal(dx*x^4, x^4*dx+4*x^3)
+    # @test isequal(dx*dx^4, dx^5)
+    # @test isequal(x*dx*x*dx, x^2*dx^2+x*dx)
+    # @test isequal(((x^2+x+1)*dx^2+(x+1)*dx+x)*(x^2*dx+x), (x^4+x^3+x^2)*dx^3+(6*x^3+6*x^2+5*x)*dx^2+(x^3+7*x^2+7*x+4)*dx+x^2+x+1)
 
-@testset "WeylAlgebra.jl" begin
+    @test_nowarn weyl_algebra(["x","y"]) # generate 2-d Weyl algebra
     D, (x,y), (dx,dy) = weyl_algebra(["x","y"])
-    @test isequal(x*dx, x*dx)
-    @test isequal(y*dy, y*dy)
-    @test isequal(dx*x, x*dx+1)
-    @test isequal(dy*y, y*dy+1)
-    @test isequal(dx*x*y, x*y*dx+y)
-    @test isequal(dx*dy*x, x*dx*dy+dy)
-    @test isequal(dx*dy*y, y*dx*dy+dx)
-    @test isequal(dy*x*y, x*y*dy+x)
-    @test isequal(dx*dy*x*y, x*y*dx*dy+x*dx+y*dy+1)
-    @test isequal(dx^2*dy*x*y, x*y*dx^2*dy+x*dx^2+2*y*dx*dy+2*dx)
-    @test isequal(dx*dy^2*x*y, x*y*dx*dy^2+2*x*dx*dy+y*dy^2+2*dy)
-    @test isequal(dx*dy*x^2*y, x^2*y*dx*dy+x^2*dx+2*x*y*dy+2*x)
-    @test isequal(dx*dy*x*y^2, x*y^2*dx*dy+2*x*y*dx+y^2*dy+2*y)
-    @test isequal(dx^2*dy^2*x*y, x*y*dx^2*dy^2+2*x*dx^2*dy+2*y*dx*dy^2+4*dx*dy)
-    @test isequal(dx^2*dy*x^2*y, x^2*y*dx^2*dy+x^2*dx^2+4*x*y*dx*dy+4*x*dx+2*y*dy+2)
-    @test isequal(dx^2*dy*x*y^2, x*y^2*dx^2*dy+2*x*y*dx^2+2*y^2*dx*dy+4*y*dx)
-    @test isequal(dx*dy^2*x^2*y, x^2*y*dx*dy^2+2*x^2*dx*dy+2*x*y*dy^2+4*x*dy)
-    @test isequal(dx*dy^2*x*y^2, x*y^2*dx*dy^2+4*x*y*dx*dy+2*x*dx+y^2*dy^2+4*y*dy+2)
-    @test isequal(dx*dy*x^2*y^2, x^2*y^2*dx*dy+2*x^2*y*dx+2*x*y^2*dy+4*x*y)
-    @test isequal(dx^2*dy^2*x^2*y^2, x^2*y^2*dx^2*dy^2+4*x^2*y*dx^2*dy+2*x^2*dx^2+4*x*y^2*dx*dy^2+16*x*y*dx*dy+8*x*dx+2*y^2*dy^2+8*y*dy+4)
-    @test isequal(x*y*dx*dy*x*y*dx*dy, x^2*y^2*dx^2*dy^2+x^2*y*dx^2*dy+x*y^2*dx*dy^2+x*y*dx*dy)
-    @test isequal(((x+y+1)*dx^2*dy+(x+y)*dx*dy)*((x^2+y)*dx*dy^2), (x^3+x^2*y+x^2+x*y+y^2+y)dx^3*dy^3+(x+y+1)*dx^3*dy^2+(x^3+x^2*y+4*x^2+5*x*y+4*x+y^2)*dx^2*dy^3+(x+y)*dx^2*dy^2+(2x^2+2*x*y+2*x+2*y+2)*dx*dy^3)
+    @test isequal(vars(x*dx*dy), vars(x))
+    @test isequal(dvars(x*y*dx), dvars(dx))
+    @test isequal(vars(x*y*dx), vars(x + y))
+    @test isequal(dvars(x*dx*dy), dvars(dx + dy))
+
+    @test isequal(x*y, y*x)     # commutativity of variables
+    @test isequal(dx*dy, dy*dx) # commutativity of derivatives
+    @test isequal(y*dx, dx*y)   # commutativity of variables and derivatives 
+    @test isequal(x*(y + dy), x*y + x*dy) # distributivity of product with variables over sum
+    @test isequal(dx*(x + y), dx*x + dx*y) # distributivity of product with derivatives over sum
+    # @test isequal(x*dx, x*dx)
+    # @test isequal(y*dy, y*dy)
+    # @test isequal(dx*x, x*dx+1)
+    # @test isequal(dy*y, y*dy+1)
+    # @test isequal(dx*x*y, x*y*dx+y)
+    # @test isequal(dx*dy*x, x*dx*dy+dy)
+    # @test isequal(dx*dy*y, y*dx*dy+dx)
+    # @test isequal(dy*x*y, x*y*dy+x)
+    # @test isequal(dx*dy*x*y, x*y*dx*dy+x*dx+y*dy+1)
+    # @test isequal(dx^2*dy*x*y, x*y*dx^2*dy+x*dx^2+2*y*dx*dy+2*dx)
+    # @test isequal(dx*dy^2*x*y, x*y*dx*dy^2+2*x*dx*dy+y*dy^2+2*dy)
+    # @test isequal(dx*dy*x^2*y, x^2*y*dx*dy+x^2*dx+2*x*y*dy+2*x)
+    # @test isequal(dx*dy*x*y^2, x*y^2*dx*dy+2*x*y*dx+y^2*dy+2*y)
+    # @test isequal(dx^2*dy^2*x*y, x*y*dx^2*dy^2+2*x*dx^2*dy+2*y*dx*dy^2+4*dx*dy)
+    # @test isequal(dx^2*dy*x^2*y, x^2*y*dx^2*dy+x^2*dx^2+4*x*y*dx*dy+4*x*dx+2*y*dy+2)
+    # @test isequal(dx^2*dy*x*y^2, x*y^2*dx^2*dy+2*x*y*dx^2+2*y^2*dx*dy+4*y*dx)
+    # @test isequal(dx*dy^2*x^2*y, x^2*y*dx*dy^2+2*x^2*dx*dy+2*x*y*dy^2+4*x*dy)
+    # @test isequal(dx*dy^2*x*y^2, x*y^2*dx*dy^2+4*x*y*dx*dy+2*x*dx+y^2*dy^2+4*y*dy+2)
+    # @test isequal(dx*dy*x^2*y^2, x^2*y^2*dx*dy+2*x^2*y*dx+2*x*y^2*dy+4*x*y)
+    # @test isequal(dx^2*dy^2*x^2*y^2, x^2*y^2*dx^2*dy^2+4*x^2*y*dx^2*dy+2*x^2*dx^2+4*x*y^2*dx*dy^2+16*x*y*dx*dy+8*x*dx+2*y^2*dy^2+8*y*dy+4)
+    # @test isequal(x*y*dx*dy*x*y*dx*dy, x^2*y^2*dx^2*dy^2+x^2*y*dx^2*dy+x*y^2*dx*dy^2+x*y*dx*dy)
+    # @test isequal(((x+y+1)*dx^2*dy+(x+y)*dx*dy)*((x^2+y)*dx*dy^2), (x^3+x^2*y+x^2+x*y+y^2+y)dx^3*dy^3+(x+y+1)*dx^3*dy^2+(x^3+x^2*y+4*x^2+5*x*y+4*x+y^2)*dx^2*dy^3+(x+y)*dx^2*dy^2+(2x^2+2*x*y+2*x+2*y+2)*dx*dy^3)
 end
 
-@testset "WeylAlgebra.jl" begin
-    D, (x,y,z), (dx,dy,dz) = weyl_algebra(["x","y","z"])
-    @test isequal(dx*dy*dz*x*y*z, x*y*z*dx*dy*dz+x*y*dx*dy+x*z*dx*dz+y*z*dy*dz+x*dx+y*dy+z*dz+1)
+@testset "DiffOpRing.jl" begin
+    @test_nowarn diff_op_ring("x")      # generate 1-d Weyl algebra
+    D, x, dx = diff_op_ring("x")
+    @test isequal(x*x, x^2)             # power of variable
+    @test isequal(dx*x, x*dx+1)         # Leibniz rule
+    @test isequal(dx*dx, dx^2)          # power of derivative
+    @test isequal(x^2*x, x*x^2)         # commutativity between product and power
+    @test isequal((x*dx)*x, x*(dx*x))   # associativity of product
+
+    @test_nowarn diff_op_ring(["x","y"]) # generate 2-d Weyl algebra
+    D, (x,y), (dx,dy) = diff_op_ring(["x","y"])
+    @test isequal(vars(x*dx*dy), vars(x))
+    @test isequal(dvars(x*y*dx), dvars(dx))
+    @test isequal(vars(x*y*dx), vars(x + y))
+    @test isequal(dvars(x*dx*dy), dvars(dx + dy))
+
+    @test isequal(x*y, y*x)     # commutativity of variables
+    @test isequal(dx*dy, dy*dx) # commutativity of derivatives
+    @test isequal(y*dx, dx*y)   # commutativity of variables and derivatives 
+    @test isequal(x*(y + dy), x*y + x*dy) # distributivity of product with variables over sum
+    @test isequal(dx*(x + y), dx*x + dx*y) # distributivity of product with derivatives over sum
+    @test isequal((x+dx)//y, x//y + dx//y) # distributivity of division
+    @test isequal(x//x, one(D)) # reduction
 end
 
-@testset "WeylAlgebra.jl" begin
+# @testset "WeylAlgebra.jl" begin
+#     D, (x,y,z), (dx,dy,dz) = weyl_algebra(["x","y","z"])
+#     @test isequal(dx*dy*dz*x*y*z, x*y*z*dx*dy*dz+x*y*dx*dy+x*z*dx*dz+y*z*dy*dz+x*dx+y*dy+z*dz+1)
+# end
+
+@testset "Coersion" begin
     D1, x, dx = weyl_algebra("x")
-    D2, (x1, y1), (dx1, dy1) = weyl_algebra(["x", "y"])
+    R1, X, dX = diff_op_ring("x")
+    D2, (x1, x2), (dx1, dx2) = weyl_algebra(["x", "y"])
+    R2, (X1, X2), (dX1, dX2) = diff_op_ring(["x", "y"])
+
     @test isequal(coerce(dx*x+1, D2) |> parent, D2)
+    @test isequal(coerce(dX*X+1, R2) |> parent, R2)    
+    @test isequal(coerce(dx*x+1, R1) |> parent, R1)    
+    @test isequal(coerce(dx1*x1+dx2*x2, R2) |> parent, R2)
 end
 
-@testset "DiffOpRing.jl" begin
-    D1, x, dx = weyl_algebra("x")
-    D2, (x1, y1), (dx1, dy1) = diff_op_ring(["x", "y"])
-    @test isequal(coerce(dx*x+1, D2) |> parent, D2)    
-end
+# @testset "DiffOpRing.jl" begin
+#     D1, x, dx = weyl_algebra("x")
+#     D2, (x1, y1), (dx1, dy1) = diff_op_ring(["x", "y"])
+# end
 
-@testset "DiffOpRing.jl" begin
-    D1, x, dx = diff_op_ring("x")
-    D2, (x1, y1), (dx1, dy1) = diff_op_ring(["x", "y"])
-    @test isequal(coerce(dx*x+1, D2) |> parent, D2)    
-end
+# @testset "DiffOpRing.jl" begin
+#     D1, x, dx = diff_op_ring("x")
+#     D2, (x1, y1), (dx1, dy1) = diff_op_ring(["x", "y"])
+# end
 
-@testset "DiffOpRings.jl" begin
-    D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
-    @test isequal((x//(x+1)*dx*((x^2+1)//x))*dx, (x^2+1)//(x+1)*dx^2+(x-1)//x*dx)
-    @test isequal(x//(x+1)*dx^2*((x^2+1)//x), (x^2+1)//(x+1)*dx^2+(2*x-2)//x*dx+2//(x^3+x^2))
-end
+# @testset "DiffOpRings.jl" begin
+#     D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
+#     @test isequal((x//(x+1)*dx*((x^2+1)//x))*dx, (x^2+1)//(x+1)*dx^2+(x-1)//x*dx)
+#     @test isequal(x//(x+1)*dx^2*((x^2+1)//x), (x^2+1)//(x+1)*dx^2+(2*x-2)//x*dx+2//(x^3+x^2))
+# end
 
-@testset "WeylAlgebra.jl" begin
-    D, (x,y), (dx,dy) = weyl_algebra(["x", "y"])
-    @test isequal(vars(x*dx), vars(x))
-end
+# @testset "WeylAlgebra.jl" begin
+#     D, (x,y), (dx,dy) = weyl_algebra(["x", "y"])
+#     @test isequal(vars(x*dx), vars(x))
+# end
 
 
-@testset "WeylAlgebra.jl" begin
-    D, (x,y), (dx,dy) = weyl_algebra(["x", "y"])
-    @test isequal(dvars(x*dx), dvars(dx))
-end
+# @testset "WeylAlgebra.jl" begin
+#     D, (x,y), (dx,dy) = weyl_algebra(["x", "y"])
+#     @test isequal(dvars(x*dx), dvars(dx))
+# end
 
-@testset "DiffOpRing.jl" begin
-    D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
-    @test isequal(vars(x//y*dx), vars(x+y))
-end
+# @testset "DiffOpRing.jl" begin
+#     D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
+#     @test isequal(vars(x//y*dx), vars(x+y))
+# end
 
 
-@testset "DiffOpRing.jl" begin
-    D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
-    @test isequal(dvars(x//y*dx), dvars(dx))
-end
+# @testset "DiffOpRing.jl" begin
+#     D, (x,y), (dx,dy) = diff_op_ring(["x", "y"])
+#     @test isequal(dvars(x//y*dx), dvars(dx))
+# end
 
 

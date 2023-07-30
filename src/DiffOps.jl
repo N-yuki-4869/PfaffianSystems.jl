@@ -143,6 +143,7 @@ function Base.:*(l::T, r::T) where T <: AbstractDiffOp
     return T(parent(l), ret_dop)
 end
 
+# TODO: case for y < 0
 function Base.:^(x::T, y::Integer) where T <: AbstractDiffOp
     ret_dop = x
     for _ = 1:y-1
