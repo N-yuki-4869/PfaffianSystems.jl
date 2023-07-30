@@ -17,6 +17,19 @@ end
 Base.one(wae::Union{Type{T}, T}) where T <: AbstractDiffOp = T(parent(wae), one(unwrap(wae)))
 Base.zero(wae::Union{Type{T}, T}) where T <: AbstractDiffOp = T(parent(wae), zero(unwrap(wae)))
 
+function vars(wae::RatFuncElem)
+    set = Set{typeof(wae)}()
+    wae_nume = numerator(wae)
+    wae_nume_vars = vars(wae_nume)
+    set = union(set, wae_nume_vars)
+
+    wae_deno = denominator(wae)
+    wae_deno_vars = vars(wae_deno)
+    set = union(set, wae_deno_vars)
+
+    return set
+end
+
 """
     vars(wae::T) where T <: AbstractDiffOp
 
@@ -168,6 +181,17 @@ function _nth_derivative(f::T, x::T ,n::Integer) where T
     end
     return f
 
+end
+
+function derivative(f::RatFuncElem ,x::RatFuncElem)
+    f_nume = numerator(f)
+    f_deno = denominator(f)
+    x_nume = numerator(x)
+    nume = parent(x)((derivative(f_nume,x_nume)*f_deno - f_nume*derivative(f_deno,x_nume)))
+    deno = parent(x)((f_deno^2))
+    #@show nume , deno, typeof(nume) , typeof(deno)
+    ret_dop = nume // deno
+    return ret_dop
 end
 
 # """

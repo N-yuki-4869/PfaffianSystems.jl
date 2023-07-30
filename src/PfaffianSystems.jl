@@ -21,7 +21,10 @@ using Bijections
 # using Symbolics: scalarize
 using Base: @invokelatest
 using AbstractAlgebra
+
 const AA = AbstractAlgebra
+const RatFuncElem = Generic.RationalFunctionFieldElem
+
 function Bijection{S, T}(dict::AbstractDict{S, T}) where S where T
 	return Bijection(dict)
 end
