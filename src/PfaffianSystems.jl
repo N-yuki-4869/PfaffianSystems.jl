@@ -1,6 +1,8 @@
 module PfaffianSystems
 
 import Base: sort
+import AbstractAlgebra: nvars, gens, base_ring, intersection, derivative, vars
+import Base: ==, parent
 
 # Write your package code here.
 using Bijections
@@ -19,7 +21,6 @@ using Bijections
 # using Symbolics: scalarize
 using Base: @invokelatest
 using AbstractAlgebra
-import AbstractAlgebra: nvars, gens, base_ring, intersection, derivative, vars
 const AA = AbstractAlgebra
 function Bijection{S, T}(dict::AbstractDict{S, T}) where S where T
 	return Bijection(dict)
@@ -34,7 +35,7 @@ abstract type AbstractDORing end
 # include("AsirWrapper.jl")
 # export isAsirAvailable, vec2str, asir_derivative, asir_reduce, asir_fctr
 
-# include("DiffOps.jl")
+include("DiffOps.jl")
 # export genVars, addVars, apply_do, dmul
 
 # include("DIdeals.jl")
