@@ -24,22 +24,24 @@ unwrap(D::WeylAlgebra) = D.WAlg
 
 # Base.one(D::WeylAlgebra) = D |> unwrap |> one |> WAlgElem
 # Base.zero(D::WeylAlgebra) = D |> unwrap |> zero |> WAlgElem
-Base.one(D::T) where T <: AbstractDORing = D(1)
-Base.zero(D::T) where T <: AbstractDORing = D(0)
 
-base_ring(D::WeylAlgebra) = D |> unwrap |> base_ring
-function gens(D::WeylAlgebra)
-    g = D |> base_ring |> gens
-    g = unwrap(D).(g)
-    # g .|> WAlgElem
-    return g .|> (s->WAlgElem(D, s))
-end
+
+# base_ring(D::WeylAlgebra) = D |> unwrap |> base_ring
+
+# function gens(D::WeylAlgebra)
+#     g = D |> base_ring |> gens
+#     g = unwrap(D).(g)
+#     # g .|> WAlgElem
+#     return g .|> (s->WAlgElem(D, s))
+# end
+
 # dgens(D::WeylAlgebra) = D |> unwrap |> gens .|> WAlgElem
-function dgens(D::WeylAlgebra)
-    dg = D |> unwrap |> gens
-    return dg .|> (s->WAlgElem(D, s))
-end
-nvars(D::WeylAlgebra) = D |> unwrap |> nvars
+# function dgens(D::WeylAlgebra)
+#     dg = D |> unwrap |> gens
+#     return dg .|> (s->WAlgElem(D, s))
+# end
+
+# nvars(D::WeylAlgebra) = D |> unwrap |> nvars
 
 elem_type(D::Union{Type{WeylAlgebra{T}}, WeylAlgebra{T}}) where {S <: MPolyRingElem, T <: MPolyRing{S}} = WAlgElem{Generic.MPoly{S}}
 
@@ -57,7 +59,10 @@ end
 # unwrap(wae::WAlgElem) = wae.elem
 
 
-Base.:(==)(x::WeylAlgebra, y::WeylAlgebra) = unwrap(x) == unwrap(y)
+# Base.:(==)(x::WeylAlgebra, y::WeylAlgebra) = unwrap(x) == unwrap(y)
+
+Base.:^(x::WAlgElem, y::Integer) = diff_op_pow(x,y)
+
 
 ############################################################
 # 
@@ -285,3 +290,30 @@ end
 (D::WeylAlgebra)(x::WAlgElem) = coerce(x, D)
 
 
+
+############################################################
+# 
+# Common to WeylAlgebra and DiffOpRing
+# 
+############################################################
+
+Base.one(D::T) where T <: AbstractDORing = D(1)
+Base.zero(D::T) where T <: AbstractDORing = D(0)
+
+base_ring(D::AbstractDORing) = D |> unwrap |> base_ring
+
+function gens(D::AbstractDORing)
+    g = D |> base_ring |> gens
+    g = unwrap(D).(g)
+    # g .|> WAlgElem
+    return g .|> (s->elem_type(D)(D, s))
+end
+
+function dgens(D::AbstractDORing)
+    dg = D |> unwrap |> gens
+    return dg .|> (s->elem_type(D)(D, s))    
+end
+
+nvars(D::AbstractDORing) = D |> unwrap |> nvars
+
+Base.:(==)(x::AbstractDORing, y::AbstractDORing) = unwrap(x) == unwrap(y)
