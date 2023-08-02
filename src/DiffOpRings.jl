@@ -24,20 +24,22 @@ unwrap(R::DiffOpRing) = R.DOR
 # Base.one(R::DiffOpRing) = R |> unwrap |> one |> DORElem
 # Base.zero(R::DiffOpRing) = R |> unwrap |> zero |> DORElem
 
-base_ring(R::DiffOpRing) = R |> unwrap |> base_ring
-function gens(R::DiffOpRing)
-	g = R |> unwrap |> base_ring |> gens
-	g = unwrap(R).(g)
-	return g .|> (s->DORElem(R, s))
-end
+# base_ring(R::DiffOpRing) = R |> unwrap |> base_ring
+# function gens(R::DiffOpRing)
+# 	g = R |> base_ring |> gens
+# 	g = unwrap(R).(g)
+# 	return g .|> (s->DORElem(R, s))
+# end
 
-function dgens(R::DiffOpRing)
-    dg = R |> unwrap |> gens
-    return dg .|> (s->DORElem(R, s))
-end
+# function dgens(R::DiffOpRing)
+#     dg = R |> unwrap |> gens
+#     return dg .|> (s->DORElem(R, s))
+# end
 # dgens(R::DiffOpRing) = R |> unwrap |> gens .|> DORElem
 
-nvars(R::DiffOpRing) = R |> unwrap |> nvars
+# nvars(R::DiffOpRing) = R |> unwrap |> nvars
+
+elem_type(D::Union{Type{DiffOpRing{T}}, DiffOpRing{T}}) where {S <: RatFuncElem, T <: MPolyRing{S}} = DORElem{Generic.MPoly{S}}
 
 function Base.show(io::IO, R::DiffOpRing)
 	print(io, nvars(R), "-dimensional ring of differential opeartors in [$(join(string.(gens(R)), ","))]")
@@ -52,10 +54,16 @@ struct DORElem{T <: MPolyRingElem{<:RatFuncElem}} <: AbstractDiffOp
 	elem::T
 end
 
-Base.:(==)(x::DiffOpRing, y::DiffOpRing) = unwrap(x) == unwrap(y)
+# Base.:(==)(x::DiffOpRing, y::DiffOpRing) = unwrap(x) == unwrap(y)
 
 
-
+function Base.:^(x::DORElem, y::Integer) 
+    if y < 0
+        x = 1 // x
+        y = - y
+    end
+    return diff_op_pow(x,y)
+end
 
 Base.://(x::DORElem,y::Union{Rational, Integer}) = x//(parent(x)(y))
 Base.://(x::Union{Rational, Integer},y::DORElem) = (parent(y)(x))//y
