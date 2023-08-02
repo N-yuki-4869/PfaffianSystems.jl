@@ -144,7 +144,9 @@ function Base.:*(l::T, r::T) where T <: AbstractDiffOp
 end
 
 # TODO: case for y < 0
-function Base.:^(x::T, y::Integer) where T <: AbstractDiffOp
+function diff_op_pow(x::T, y::Integer) where T <: AbstractDiffOp
+	y == 0 && return one(x)
+
     ret_dop = x
     for _ = 1:y-1
         ret_dop *= x
