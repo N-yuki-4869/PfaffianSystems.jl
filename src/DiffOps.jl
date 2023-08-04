@@ -154,6 +154,9 @@ function diff_op_pow(x::T, y::Integer) where T <: AbstractDiffOp
     return ret_dop
 end
 
+Base.:literal_pow(::typeof(^), x::AbstractDiffOp,::Val{y}) where y = x^y
+
+
 function leibniz_rule(l_mons::T, r_coeffs::U) where {U, T <: MPolyRingElem{<:U}}
     ret_dop = r_coeffs * l_mons
     n = nvars(parent(l_mons))
