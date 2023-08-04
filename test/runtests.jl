@@ -206,6 +206,7 @@ end
     @test isequal(x*(y + dy), x*y + x*dy) # distributivity of product with variables over sum
     @test isequal(dx*(x + y), dx*x + dx*y) # distributivity of product with derivatives over sum
     @test isequal((x+dx)//y, x//y + dx//y) # distributivity of division
+    @test isequal((x+dx)*y^-1, x//y + dx//y) # distributivity of division
     @test isequal(x//x, one(D)) # reduction
 end
 
