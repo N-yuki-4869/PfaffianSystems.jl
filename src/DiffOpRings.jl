@@ -65,6 +65,7 @@ function Base.:^(x::DORElem, y::Integer)
     return diff_op_pow(x,y)
 end
 
+
 Base.://(x::DORElem,y::Union{Rational, Integer}) = x//(parent(x)(y))
 Base.://(x::Union{Rational, Integer},y::DORElem) = (parent(y)(x))//y
 
@@ -109,6 +110,11 @@ function diff_op_ring(F::Field, s::AbstractString; kw...)
 end
 diff_op_ring(s::AbstractString; kw...) = diff_op_ring(QQ, s; kw...)
 
+function diff_op_ring(F::Field, s::AbstractString, n::Integer)
+    D = DiffOpRing(F, [Symbol(s,i) for i = 1:n])
+    return D, gens(D), dgens(D)
+end
+diff_op_ring(s::AbstractString,n::Integer) = diff_op_ring(QQ, s, n)
 
 
 
