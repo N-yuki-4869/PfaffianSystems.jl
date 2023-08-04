@@ -61,9 +61,10 @@ end
 
 # Base.:(==)(x::WeylAlgebra, y::WeylAlgebra) = unwrap(x) == unwrap(y)
 
-Base.:^(x::WAlgElem, y::Integer) = diff_op_pow(x,y)
-
-
+function Base.:^(x::WAlgElem, y::Integer)
+    y < 0 && return throw(ArgumentError("Negative powers cannot be defined"))
+    return diff_op_pow(x,y)
+end
 ############################################################
 # 
 # weyl_algebra constructor
@@ -101,6 +102,13 @@ function weyl_algebra(F::Field, D::WeylAlgebra, new_vars::AbstractVector{<:Abstr
 end
 weyl_algebra(D::WeylAlgebra, s::AbstractVector{<:AbstractString}; kw...) = weyl_algebra(QQ, D, s; kw...)
 # TODO: make new Weyl algebra with a part of variables
+
+function weyl_algebra(F::Field, s::AbstractString, n::Integer)
+    D = WeylAlgebra(F, [Symbol(s,i) for i = 1:n])
+    return D, gens(D), dgens(D)
+end
+weyl_algebra(s::AbstractString,n::Integer) = weyl_algebra(QQ, s, n)
+
 
 
 ############################################################
