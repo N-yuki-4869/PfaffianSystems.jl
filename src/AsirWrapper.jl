@@ -30,7 +30,6 @@ Return a string consiting of all elements of `v` with delimiter `delim`.
 vec2str(v::AbstractVector; delim=",") = string.(v) |> (s->join(s, delim))
 # vec2str(v::Vector{Num}; delim=",") = string.(v) .|> removeSqBra .|> add_ast |> (s->join(s, delim))
 # vec2str(v::Symbolics.Arr; delim=",") = vec2str(v |> scalarize; delim=delim)
-# vec2str(v::OrderedSet{Num}; delim=",") = vec2str(v |> collect; delim=delim)
 vec2str(v::AbstractDiffOp; delim=",") = string(v)
 function vec2str(vs...; delim=",")
 	strs = Vector{String}()

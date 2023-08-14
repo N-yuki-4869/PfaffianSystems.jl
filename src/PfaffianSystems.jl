@@ -16,7 +16,7 @@ using Bijections
 # using DynamicPolynomials: variables, exponents, coefficient, term
 # using DifferentialEquations: solve, ODEProblem
 # using Symbolics: get_variables
-# using DataStructures: OrderedSet
+using DataStructures: OrderedSet
 # export OrderedSet
 # using Symbolics: scalarize
 using Base: @invokelatest
@@ -50,9 +50,12 @@ export gens, dgens, base_ring, nvars, vars, dvars
 # export PfaffianSystem, get_vars, get_dvars, buildFuncA, integratePf, applyStdMons, denomLCM
 
 include("WeylAlgebra.jl")
-export weyl_algebra, DIdeal, Dintersection, coerce
+export weyl_algebra, coerce, elem_type
 
 include("DiffOpRings.jl")
-export diff_op_ring, coerce
+export diff_op_ring, coerce, elem_type
+
+include("DIdeals.jl")
+export DIdeal, intersection_DIdeal, stdmon
 
 end

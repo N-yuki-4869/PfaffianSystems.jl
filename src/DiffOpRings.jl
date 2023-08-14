@@ -86,38 +86,11 @@ function Base.://(x::DORElem,y::DORElem)
     end
 end
 
-
-
-
 ############################################################
 # 
-# DiffOpRing constructor
+# coersions
 # 
 ############################################################
-
-"""
-	Ring of differential operators over rational functions
-"""
-function diff_op_ring(F::Field, s::AbstractVector{<:AbstractString}; kw...)
-	D = DiffOpRing(F, Symbol.(s))
-    return D, gens(D), dgens(D)
-end
-diff_op_ring(s::AbstractVector{<:AbstractString}; kw...) = diff_op_ring(QQ, s; kw...)
-
-function diff_op_ring(F::Field, s::AbstractString; kw...)
-    D = DiffOpRing(F, [Symbol(s)])
-    return D, gens(D)[1], dgens(D)[1]
-end
-diff_op_ring(s::AbstractString; kw...) = diff_op_ring(QQ, s; kw...)
-
-function diff_op_ring(F::Field, s::AbstractString, n::Integer)
-    D = DiffOpRing(F, [Symbol(s,i) for i = 1:n])
-    return D, gens(D), dgens(D)
-end
-diff_op_ring(s::AbstractString,n::Integer) = diff_op_ring(QQ, s, n)
-
-
-
 
 function _coerce_unsafe(x::RatFuncElem, R::Generic.RationalFunctionField, index_map::Dict{<:Integer, <:Integer})
     n = length(index_map)
@@ -195,3 +168,38 @@ function coerce(x::WAlgElem, D::DiffOpRing)
     DORElem(D, finish(M))
 end
 (R::DiffOpRing)(x::WAlgElem) = coerce(x, R)
+
+
+############################################################
+# 
+# DiffOpRing constructor
+# 
+############################################################
+
+"""
+	Ring of differential operators over rational functions
+"""
+function diff_op_ring(F::Field, s::AbstractVector{<:AbstractString}; kw...)
+	D = DiffOpRing(F, Symbol.(s))
+    return D, gens(D), dgens(D)
+end
+diff_op_ring(s::AbstractVector{<:AbstractString}; kw...) = diff_op_ring(QQ, s; kw...)
+
+function diff_op_ring(F::Field, s::AbstractString; kw...)
+    D = DiffOpRing(F, [Symbol(s)])
+    return D, gens(D)[1], dgens(D)[1]
+end
+diff_op_ring(s::AbstractString; kw...) = diff_op_ring(QQ, s; kw...)
+
+function diff_op_ring(F::Field, s::AbstractString, n::Integer)
+    D = DiffOpRing(F, [Symbol(s,i) for i = 1:n])
+    return D, gens(D), dgens(D)
+end
+diff_op_ring(s::AbstractString,n::Integer) = diff_op_ring(QQ, s, n)
+
+
+############################################################
+# 
+# Ideal of ring of differential operators
+# 
+############################################################
