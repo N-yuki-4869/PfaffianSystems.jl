@@ -1,7 +1,7 @@
 module PfaffianSystems
 
 import Base: sort
-import AbstractAlgebra: nvars, gens, base_ring, derivative, vars
+import AbstractAlgebra: nvars, gens, base_ring, derivative, vars, coefficients, monomials, exponent_vectors
 import Base: ==, hash, parent
 
 # Write your package code here.
@@ -39,7 +39,7 @@ include("AsirWrapper.jl")
 export isAsirAvailable, vec2str, asir_derivative, asir_reduce, asir_fctr
 
 include("DiffOps.jl")
-export gens, dgens, base_ring, nvars, vars, dvars
+export gens, dgens, base_ring, nvars, vars, dvars 
 # export genVars, addVars, apply_do, dmul
 
 # include("DIdeals.jl")
