@@ -130,7 +130,7 @@ Base.:+(x::T, y::T) where T <: AbstractDiffOp = T(parent(x), unwrap(x) + unwrap(
 Base.:-(x::T, y::T) where T <: AbstractDiffOp = T(parent(x), unwrap(x) - unwrap(y))
 
 function Base.:*(l::T, r::T) where T <: AbstractDiffOp
-    l_coeffs = l |> unwrap |> coefficients 
+    l_coeffs = l |> unwrap |> coefficients
     l_mons = l |> unwrap |> monomials
     r_coeffs = r |> unwrap |> coefficients
     r_mons = r |> unwrap |> monomials
@@ -143,7 +143,6 @@ function Base.:*(l::T, r::T) where T <: AbstractDiffOp
     return T(parent(l), ret_dop)
 end
 
-# TODO: case for y < 0
 function diff_op_pow(x::T, y::Integer) where T <: AbstractDiffOp
 	y == 0 && return one(x)
 
@@ -321,3 +320,20 @@ end
 # end
 # dmul(dol::Num, dor::Num, v2d::Bijection{Num, Num}; use_asir=false) = dmul(dol, value(dor), v2d; use_asir=use_asir)
 # dmul(dol, dor, v2d::Bijection{Num, Num}; use_asir=false) = dol*dor
+
+###########################
+#
+# Today
+#
+###########################
+
+coefficients(f::T) where T <: AbstractDiffOp = f |> unwrap |> coefficients |> collect
+function monomials(f::T) where T <: AbstractDiffOp
+    f_mons = f |> unwrap |> monomials |> collect
+    f_mons = collect(f_mons .|> (s->T(parent(f), s)))
+    return f_mons
+end
+function exponent_vectors(f::T) where T <: AbstractDiffOp
+    return f |> unwrap |> exponent_vectors |> collect
+end
+        
