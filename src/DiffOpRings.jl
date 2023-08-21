@@ -211,3 +211,33 @@ diff_op_ring(s::AbstractString,n::Integer) = diff_op_ring(QQ, s, n)
 # Ideal of ring of differential operators
 # 
 ############################################################
+
+function normalform(f,g)
+end
+function wnormalform(f::T, G::Vector{T}) where T<: DORElem
+    r = f
+    q = Vector{}()
+    for _ in G
+        push!(q, 0)
+    end
+    in_r = leading_term(r) 
+    for g in G
+        if unwrap(in_r) % unwrap(g) == 0
+            r = r - in_r
+        else
+            return r, q
+        end
+    end
+    
+end
+
+function divide(x::T, y::T) where T
+    return unwrap(x) % unwrap(y)
+end
+
+function leading_term(f::DORElem)
+    f_coes = coefficients(f)
+    f_mons = monomials(f)
+    f_mon = f_mons[1] |> unwrap
+    return DORElem(parent(f), f_coes[1] * f_mon)
+end
