@@ -70,20 +70,28 @@ Base.://(x::DORElem,y::Union{Rational, Integer}) = x//(parent(x)(y))
 Base.://(x::Union{Rational, Integer},y::DORElem) = (parent(y)(x))//y
 
 function Base.://(x::DORElem,y::DORElem)
+    x_coeff = x |> unwrap |> coefficients                    
+    x_mon = x |> unwrap |> monomials  
+    y_coeff = y |> unwrap |> coefficients    
+    y_mon = y |> unwrap |> monomials
+
     ret_dop = 0
-    x_coeff = x |> unwrap |> coefficients |> collect                   
-    x_mon = x |> unwrap |> monomials |> collect 
-    y_coeff = y |> unwrap |> coefficients |> collect    
-    y_mon = y |> unwrap |> monomials |> collect
-    size(y_mon)[1] != 1 && return throw(DomainError("division by differential operator", string(y)))
-    if y_mon[1] != 1
-        return throw(DomainError("division by differential operator", string(y)))
-    else
-        for i=1:size(x_coeff)[1]
-            ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]
-        end
-        return DORElem(parent(x), ret_dop)
+
+    # size(y_mon)[1] != 1 && return throw(DomainError("division by differential operator", string(y)))
+
+
+    # for i=1:size(x_coeff)[1]
+    #     ret_dop += (x_coeff[i]// y_coeff[1]) * x_mon[i]
+    # end
+
+    isempty(dvars(y)) != true && return throw(DomainError("division by differential operator", string(y)))
+
+    for (xc, xm) in zip(x_coeff, x_mon), (yc, ym) in zip(y_coeff, y_mon)
+        ret_dop += (xc // yc) * xm
     end
+
+    return DORElem(parent(x), ret_dop)
+
 end
 
 ############################################################
