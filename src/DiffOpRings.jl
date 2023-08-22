@@ -212,28 +212,57 @@ diff_op_ring(s::AbstractString,n::Integer) = diff_op_ring(QQ, s, n)
 # 
 ############################################################
 
-function normalform(f,g)
+function normalform(f::T,g::Vector{T}) where T<: DORElem
+    r = zero(parent(f))
+    q = Vector{typeof(f)}()
+    for _ in g
+        push!(q, zero(parent(f)))
+    end
+    f, r, q = nf_2(f,g,r,q)
+    if f == zero(parent(f))
+        return r, q
+    else
+        nf_2(f,g,r,q)
+    end
 end
-function wnormalform(f::T, G::Vector{T}) where T<: DORElem
+function nf_2(f::T, g::Vector{T}, r::T, q::Vector{T}) where T<: DORElem
+    r_1, q_1 = wnormalform(f,g)
+    r = r + leading_term(r_1)
+    for i in 1:size(q)[1]
+        q[i] = q[i] + q_1[i]
+    end
+    f = r_1 - leading_term(r_1)
+    return f, r, q
+end
+
+
+
+function wnormalform(f::T, g::Vector{T}) where T<: DORElem
     r = f
-    q = Vector{}()
-    for _ in G
-        push!(q, 0)
+    q = Vector{typeof(f)}()
+    for _ in g
+        push!(q, zero(parent(f)))
     end
-    in_r = leading_term(r) 
-    for g in G
-        if unwrap(in_r) % unwrap(g) == 0
-            r = r - in_r
-        else
-            return r, q
-        end
-    end
+    return wnf_2(f, g, r, q)
     
 end
 
-function divide(x::T, y::T) where T
-    return unwrap(x) % unwrap(y)
+function wnf_2(f::T, g::Vector{T}, r::T, q::Vector{T}) where T<: DORElem
+    for i in 1:size(g)[1]
+        a = exponent_vectors(leading_term(r))[1] - exponent_vectors(leading_term(g[i]))[1]
+        if minimum(a) >= 0
+            q_mon = one(parent(f))
+            for j in 1:size(dgens(f))[1]
+                q_mon *= dgens(f)[j] ^ a[j]
+            end
+            q[i] = DORElem(parent(f), unwrap(q[i]) + coefficients(leading_term(r))[1] // coefficients(leading_term(g[i]))[1]  * unwrap(q_mon))
+            r = DORElem(parent(f), unwrap(r) - coefficients(leading_term(r))[1] // coefficients(leading_term(g[i]))[1]  * unwrap(q_mon) *  unwrap(g[i]))
+            wnf_2(f, g, r, q)
+        end
+    end
+    return r, q
 end
+
 
 function leading_term(f::DORElem)
     f_coes = coefficients(f)
