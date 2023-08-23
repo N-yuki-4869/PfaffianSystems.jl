@@ -130,14 +130,14 @@ Base.:+(x::T, y::T) where T <: AbstractDiffOp = T(parent(x), unwrap(x) + unwrap(
 Base.:-(x::T, y::T) where T <: AbstractDiffOp = T(parent(x), unwrap(x) - unwrap(y))
 
 function Base.:*(l::T, r::T) where T <: AbstractDiffOp
+    l == zero(parent(l)) && return zero(parent(l))
+    r == zero(parent(r)) && return zero(parent(r))
     l_coeffs = l |> unwrap |> coefficients
     l_mons = l |> unwrap |> monomials
     r_coeffs = r |> unwrap |> coefficients
     r_mons = r |> unwrap |> monomials
-
     ret_dop = 0
-
-    for (lc, lm) in zip(l_coeffs, l_mons), (rc, rm) in zip(r_coeffs, r_mons) 
+    for (lc, lm) in zip(l_coeffs, l_mons), (rc, rm) in zip(r_coeffs, r_mons)
         ret_dop +=  lc * leibniz_rule(lm, rc) * rm
     end
     return T(parent(l), ret_dop)
