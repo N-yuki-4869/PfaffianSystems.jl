@@ -265,4 +265,25 @@ end
 #     @test isequal(dvars(x//y*dx), dvars(dx))
 # end
 
+@testset "DiffOpRings.jl" begin
+    D, (x,y,z), (dx,dy,dz) = diff_op_ring(["x","y","z"])
+    #　余りが0のとき
+    f = dx*dy^3
+    g = [dy+1, dx]
+    r, q = normalform(f,g)
+    @test isequal(f, q[1] * g[1] + q[2] * g[2] + r)
+
+    #　余りが0でない＋係数に多項式を含む
+    f = dx*dy^3
+    g = [x*dy+1, dx]
+    r, q = normalform(f,g)
+    @test isequal(f, q[1] * g[1] + q[2] * g[2] + r)
+
+    #　教科書通り
+    f = dx*dy^3
+    g = [dx*dy+1, 2*y*dy^2-dx+3*dy+2*x]
+    r , q =  normalform(f,g)
+    @test isequal(f, q[1] * g[1] + q[2] * g[2] + r)
+end
+
 
