@@ -53,7 +53,7 @@ include("WeylAlgebra.jl")
 export weyl_algebra, coerce, elem_type
 
 include("DiffOpRings.jl")
-export diff_op_ring, coerce, elem_type, normalform
+export diff_op_ring, coerce, elem_type, normalform, leading_term
 
 include("DIdeals.jl")
 export DIdeal, intersection_DIdeal, stdmon
