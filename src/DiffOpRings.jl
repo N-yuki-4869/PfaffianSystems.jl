@@ -298,11 +298,61 @@ end
 # end
 
 
-function leading_term(f::DORElem)
+function leading_term(f::DORElem, order::Symbol=:lex)
     f == zero(parent(f)) && return zero(parent(f))
     f_coes = coefficients(f)
     f_mons = monomials(f)
-    f_mon = f_mons[1] |> unwrap
-    return DORElem(parent(f), f_coes[1] * f_mon)
+    if order == :lex
+        f_mon = f_mons[1] |> unwrap
+        return DORElem(parent(f), f_coes[1] * f_mon)
+    elseif order == :revlex
+    elseif order == :grlex
+    elseif order == :grevlex
+        exp_sum = Vector{Integer}()
+        for i in exponent_vectors(f)
+            push!(exp_sum, sum(i))
+        end
+        exp_max = findall(x->x==maximum(exp_sum), exp_sum)
+        for i in 1:size(dgens(f))[1]
+            for j in exp_max
+                # exponent_vectors(f)[j][]
+
+
+            end
+
+        end
+    end
+end
+
+function pfaffian_system(G::Vector{T}, S::Vector{T}) where T <: DORElem
+    vars = dgens(S[1])
+    p = Vector{Vector{Vector{typeof(zero(base_ring(parent(S[1]))))}}}()
+    for var in vars
+        p_elem = Vector{Vector{typeof(zero(base_ring(parent(S[1]))))}}()
+        for s_elem in S
+            p_e_elem = Vector{typeof(zero(base_ring(parent(S[1]))))}()
+            p_e_elem_coef = coefficients(normalform(var * s_elem, G)[1])
+            p_e_elem_mono = monomials(normalform(var * s_elem, G)[1])
+            for s in S
+                a = true
+                for (c,m) in zip(p_e_elem_coef, p_e_elem_mono)
+                    if m == s
+                        push!(p_e_elem, c)
+                        a = false
+                    end
+                    
+                end
+                a == true && push!(p_e_elem, zero(base_ring(parent(S[1]))))
+                
+            end
+            push!(p_elem , p_e_elem)
+        end
+        push!(p, p_elem)
+    end
+    p_i = Vector{Array{Vector{typeof(zero(base_ring(parent(S[1]))))}}}()
+    for i in 1:size(p)[1]
+        push!(p_i , vcat(p[i]))
+    end
+    return p_i
 end
 
