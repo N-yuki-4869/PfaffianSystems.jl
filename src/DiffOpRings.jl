@@ -179,57 +179,11 @@ diff_op_ring(s::AbstractString,n::Integer) = diff_op_ring(QQ, s, n)
 # 
 ############################################################
 
-function normalform(f::T,g::Vector{T}) where T<: DORElem
-    r = zero(parent(f))
-    q = Vector{typeof(f)}()
-    for _ in g
-        push!(q, zero(parent(f)))
-    end
-    f_not0 = true
-    while f_not0
-        r_1, q_1 = wnormalform(f,g)
-        r = r + leading_term(r_1)
-        for i in 1:size(q)[1]
-            q[i] = q[i] + q_1[i]
-        end
-        f = r_1 - leading_term(r_1)
-
-        if f == zero(parent(f))
-            f_not0 = false
-            return r, q
-        end
-    end
-end
-
-function wnormalform(f::T, g::Vector{T}) where T<: DORElem
-    r = f
-    q = Vector{typeof(f)}()
-    for _ in g
-        push!(q, zero(parent(f)))
-    end
-
-    find_g = true
-    while find_g 
-        for i in 1:size(g)[1]
-            find_g = false
-            r == zero(parent(f)) && break
-            a = exponent_vectors(leading_term(r))[1] - exponent_vectors(leading_term(g[i]))[1]
-            if minimum(a) >= 0
-                q_mon = one(parent(f))
-                for j in 1:size(dgens(f))[1]
-                    q_mon *= dgens(f)[j] ^ a[j]
-                end
-                q[i] = DORElem(parent(f), unwrap(q[i]) + coefficients(leading_term(r))[1] // coefficients(leading_term(g[i]))[1]  * unwrap(q_mon))
-                r = r - DORElem(parent(f), coefficients(leading_term(r))[1] // coefficients(leading_term(g[i]))[1]  * unwrap(q_mon)) * g[i]
-                find_g = true
-                break
-            end
-        end
-    end
-    return r, q 
-    
-end
-
+"""
+    leading_term(f::DORElem, order::Symbol=:lex)
+Return the leading term of `f` with respect to `order`. 
+Only `order=:lex` is supported now.
+"""
 function leading_term(f::DORElem, order::Symbol=:lex)
     f == zero(parent(f)) && return zero(parent(f))
     f_coes = coefficients(f)
@@ -240,10 +194,7 @@ function leading_term(f::DORElem, order::Symbol=:lex)
     elseif order == :revlex
     elseif order == :grlex
     elseif order == :grevlex
-        exp_sum = Vector{Integer}()
-        for i in exponent_vectors(f)
-            push!(exp_sum, sum(i))
-        end
+        exp_sum = [sum(i) for i in exponent_vectors(f)]
         exp_max = findall(x->x==maximum(exp_sum), exp_sum)
         for i in 1:size(dgens(f))[1]
             for j in exp_max
@@ -254,6 +205,64 @@ function leading_term(f::DORElem, order::Symbol=:lex)
 
         end
     end
+end
+
+"""
+    normalform(f::T, G::Vector{T}) where T<: DORElem
+Compute normal form of `f` with respect to `G` and return the remainder `r` and quotients `q`.
+"""
+function normalform(f::T, G::Vector{T}) where T<: DORElem
+    r = zero(parent(f))
+    q = [zero(parent(f)) for _ in G]
+
+    while f != zero(parent(f))
+        r_1, q_1 = wnormalform(f, G)
+        r = r + leading_term(r_1)
+
+        for i in 1:size(q)[1]
+            q[i] = q[i] + q_1[i]
+        end
+
+        f = r_1 - leading_term(r_1)
+    end
+    return r, q
+end
+
+"""
+  wnormalform(f::T, G::Vector{T}) where T<: DORElem
+Compute weak normal form of `f` with respect to `G` and return the remainder `r` and quotients `q`.
+"""
+function wnormalform(f::T, G::Vector{T}) where T<: DORElem
+    r = f
+    n = nvars(parent(f))
+    q = [zero(parent(f)) for _ in G]
+
+    reducible = true
+    while reducible 
+        reducible = false
+        for (i, g) in enumerate(G)
+            r == zero(parent(f)) && break
+
+            lt_r = leading_term(r)
+            lt_g = leading_term(g)
+            lc_r = coefficients(lt_r)[1]
+            lc_g = coefficients(lt_g)[1]
+            a = exponent_vectors(lt_r)[1] - exponent_vectors(lt_g)[1]
+
+            if minimum(a) >= 0
+                reducible = true
+                q_mon = one(parent(f))
+                for j = 1:n
+                    q_mon *= dgens(f)[j] ^ a[j]
+                end
+                q[i] = DORElem(parent(f), unwrap(q[i]) + lc_r // lc_g  * unwrap(q_mon))
+                r = r - DORElem(parent(f), lc_r // lc_g  * unwrap(q_mon)) * g
+                break
+            end
+        end
+    end
+    return r, q 
+    
 end
 
 """
@@ -297,39 +306,3 @@ function pfaffian_system(G::Vector{T}, S::Vector{T}) where T <: DORElem
 
     return p
 end
-
-# function pfaffian_system(G::Vector{T}, S::Vector{T}) where T <: DORElem
-#     R = base_ring(parent(S[1]))
-#     vars = dgens(S[1])
-#     n = size(vars)[1]
-#     d = size(S)[1]
-#     p = Vector{Vector{Vector{elem_type(R)}}}()
-#     for var in vars
-#         p_elem = Vector{Vector{elem_type(R)}}()
-#         for s_elem in S
-#             p_e_elem = Vector{elem_type(R)}()
-#             p_e_elem_coef = coefficients(normalform(var * s_elem, G)[1])
-#             p_e_elem_mono = monomials(normalform(var * s_elem, G)[1])
-#             for s in S
-#                 a = true
-#                 for (c,m) in zip(p_e_elem_coef, p_e_elem_mono)
-#                     if m == s
-#                         push!(p_e_elem, c)
-#                         a = false
-#                     end
-                    
-#                 end
-#                 a == true && push!(p_e_elem, zero(R))
-                
-#             end
-#             push!(p_elem , p_e_elem)
-#         end
-#         push!(p, p_elem)
-#     end
-#     p_i = Vector{Array{Vector{elem_type(R)}}}()
-#     for i in 1:size(p)[1]
-#         push!(p_i , vcat(p[i]))
-#     end
-#     return p_i
-# end
-
