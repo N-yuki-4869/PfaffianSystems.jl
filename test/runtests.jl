@@ -77,15 +77,21 @@ end
     D, (x,y,z), (dx,dy,dz) = diff_op_ring(["x","y","z"])
 
     # r is equalt to 0
-    r, q = normalform(dx*dy^3, [dy+1, dx])
+    f = dx*dy^3
+    g = [x*dy+1, dx]
+    r, q = normalform(f, g)
     @test isequal(f, q[1] * g[1] + q[2] * g[2] + r)
 
     # r is not equal to 0 and q[1] includes a non-constant coefficient
-    r, q = normalform(dx*dy^3, [x*dy+1, dx])
+    f = dx*dy^3
+    g = [x*dy+1, dx]
+    r, q = normalform(f, g)
     @test isequal(f, q[1] * g[1] + q[2] * g[2] + r)
 
     # Example 6.1.6 in [N. Takayama, ``Chapter 6: Grobner Basis for Rings of Differnetial Operators and Applications,'', Grobner Bases, Hibi eds., Springer, 2013]
-    r , q =  normalform(dx*dy^3, [dx*dy+1, 2*y*dy^2-dx+3*dy+2*x])
+    f = dx*dy^3
+    g = [dx*dy+1, 2*y*dy^2-dx+3*dy+2*x]
+    r , q =  normalform(f, g)
     @test isequal(f, q[1] * g[1] + q[2] * g[2] + r)
 end
 
