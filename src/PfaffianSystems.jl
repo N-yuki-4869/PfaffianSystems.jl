@@ -1,7 +1,7 @@
 module PfaffianSystems
 
 import Base: sort, ==, hash, parent
-import AbstractAlgebra: nvars, gens, base_ring, derivative, vars, coefficients, monomials, exponent_vectors
+import AbstractAlgebra: nvars, gens, base_ring, derivative, vars, coefficients, monomials, exponent_vectors, elem_type
 
 using Bijections
 using DataStructures: OrderedSet
@@ -28,7 +28,7 @@ include("WeylAlgebra.jl")
 export weyl_algebra, coerce, elem_type
 
 include("DiffOpRings.jl")
-export diff_op_ring, coerce, elem_type, normalform, leading_term
+export diff_op_ring, coerce, elem_type, normalform, leading_term, pfaffian_system, pfaffian_system2	
 
 include("DIdeals.jl")
 export DIdeal, intersection_DIdeal, stdmon

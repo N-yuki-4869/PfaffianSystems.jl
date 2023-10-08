@@ -256,35 +256,80 @@ function leading_term(f::DORElem, order::Symbol=:lex)
     end
 end
 
+"""
+    pfaffian_system(G::Vector{T}, S::Vector{T}) where T <: DORElem
+
+# Examples
+
+```jldoctest
+julia> R, (x, y), (dx, dy) = diff_op_ring(["x", "y"])
+julia> pfaffian_system([dx^2 + 1, dy^2 + 1], [one(dx), dx, dy])
+2-element Vector{Matrix{AbstractAlgebra.Generic.RationalFunctionFieldElem{Rational{BigInt}, AbstractAlgebra.Generic.MPoly{Rational{BigInt}}}}}:
+ [0 1 0; -1 0 0; 0 0 0]
+ [0 0 1; 0 0 0; -1 0 0]
+```
+"""
 function pfaffian_system(G::Vector{T}, S::Vector{T}) where T <: DORElem
-    vars = dgens(S[1])
-    p = Vector{Vector{Vector{typeof(zero(base_ring(parent(S[1]))))}}}()
-    for var in vars
-        p_elem = Vector{Vector{typeof(zero(base_ring(parent(S[1]))))}}()
-        for s_elem in S
-            p_e_elem = Vector{typeof(zero(base_ring(parent(S[1]))))}()
-            p_e_elem_coef = coefficients(normalform(var * s_elem, G)[1])
-            p_e_elem_mono = monomials(normalform(var * s_elem, G)[1])
-            for s in S
-                a = true
-                for (c,m) in zip(p_e_elem_coef, p_e_elem_mono)
-                    if m == s
-                        push!(p_e_elem, c)
-                        a = false
-                    end
-                    
+
+    R = base_ring(parent(S[1]))
+    dops = dgens(S[1])
+    n = size(dops)[1]
+    d = size(S)[1]
+
+    # p = Vector{Matrix{elem_type(R)}}(Matrix{elem_type(R)}(undef, d, d), n)
+    p = [fill(zero(R), d, d) for _ in 1:n]
+    for i in eachindex(p)
+        for j = 1:d
+            nf_ds1 = normalform(dops[i] * S[j], G)[1]
+            nf_ds1_coef = coefficients(nf_ds1)
+            nf_ds1_mono = monomials(nf_ds1)
+
+            for k = 1:d
+                idx = findfirst(x->x==S[k], nf_ds1_mono)
+                if idx === nothing
+                    p[i][j, k] = zero(R)
+                else
+                    p[i][j, k] = nf_ds1_coef[idx]
                 end
-                a == true && push!(p_e_elem, zero(base_ring(parent(S[1]))))
-                
             end
-            push!(p_elem , p_e_elem)
         end
-        push!(p, p_elem)
     end
-    p_i = Vector{Array{Vector{typeof(zero(base_ring(parent(S[1]))))}}}()
-    for i in 1:size(p)[1]
-        push!(p_i , vcat(p[i]))
-    end
-    return p_i
+
+    return p
 end
+
+# function pfaffian_system(G::Vector{T}, S::Vector{T}) where T <: DORElem
+#     R = base_ring(parent(S[1]))
+#     vars = dgens(S[1])
+#     n = size(vars)[1]
+#     d = size(S)[1]
+#     p = Vector{Vector{Vector{elem_type(R)}}}()
+#     for var in vars
+#         p_elem = Vector{Vector{elem_type(R)}}()
+#         for s_elem in S
+#             p_e_elem = Vector{elem_type(R)}()
+#             p_e_elem_coef = coefficients(normalform(var * s_elem, G)[1])
+#             p_e_elem_mono = monomials(normalform(var * s_elem, G)[1])
+#             for s in S
+#                 a = true
+#                 for (c,m) in zip(p_e_elem_coef, p_e_elem_mono)
+#                     if m == s
+#                         push!(p_e_elem, c)
+#                         a = false
+#                     end
+                    
+#                 end
+#                 a == true && push!(p_e_elem, zero(R))
+                
+#             end
+#             push!(p_elem , p_e_elem)
+#         end
+#         push!(p, p_elem)
+#     end
+#     p_i = Vector{Array{Vector{elem_type(R)}}}()
+#     for i in 1:size(p)[1]
+#         push!(p_i , vcat(p[i]))
+#     end
+#     return p_i
+# end
 
