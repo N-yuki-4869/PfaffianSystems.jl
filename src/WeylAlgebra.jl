@@ -5,8 +5,6 @@
 #
 ############################################################
 
-# WeylAlgebra{T} = MPolyRing{MPolyRingElem{T}} where T
-
 struct WeylAlgebra{T <: MPolyRing{<:MPolyRingElem}} <: AbstractDORing
 	WAlg::T
 
@@ -21,27 +19,6 @@ end
 unwrap(D::WeylAlgebra) = D.WAlg
 (D::WeylAlgebra)(num::Union{Rational, Integer}) = WAlgElem(D, unwrap(D)(num))
 
-# Base.one(D::WeylAlgebra) = D |> unwrap |> one |> WAlgElem
-# Base.zero(D::WeylAlgebra) = D |> unwrap |> zero |> WAlgElem
-
-
-# base_ring(D::WeylAlgebra) = D |> unwrap |> base_ring
-
-# function gens(D::WeylAlgebra)
-#     g = D |> base_ring |> gens
-#     g = unwrap(D).(g)
-#     # g .|> WAlgElem
-#     return g .|> (s->WAlgElem(D, s))
-# end
-
-# dgens(D::WeylAlgebra) = D |> unwrap |> gens .|> WAlgElem
-# function dgens(D::WeylAlgebra)
-#     dg = D |> unwrap |> gens
-#     return dg .|> (s->WAlgElem(D, s))
-# end
-
-# nvars(D::WeylAlgebra) = D |> unwrap |> nvars
-
 elem_type(D::Union{Type{WeylAlgebra{T}}, WeylAlgebra{T}}) where {S <: MPolyRingElem, T <: MPolyRing{S}} = WAlgElem{Generic.MPoly{S}}
 
 function Base.show(io::IO, D::WeylAlgebra)
@@ -50,15 +27,10 @@ end
 
 # TODO: wrapper for constant
 
-
 struct WAlgElem{T <: MPolyRingElem{<:MPolyRingElem}} <: AbstractDiffOp
     parent::WeylAlgebra
 	elem::T
 end
-# unwrap(wae::WAlgElem) = wae.elem
-
-
-# Base.:(==)(x::WeylAlgebra, y::WeylAlgebra) = unwrap(x) == unwrap(y)
 
 function Base.:^(x::WAlgElem, y::Integer)
     y < 0 && return throw(DomainError("exponent must be non-negative"))
@@ -101,9 +73,11 @@ function _coerce_unsafe(x::MPolyRingElem, M::MPolyRing, index_map::Dict{Integer,
     n = length(index_map)
     cezip = zip(coefficients(x), exponent_vectors(x))
     C = Generic.MPolyBuildCtx(M)
+
     for (c,e) in cezip
         push_term!(C, c,[get(e, index_map[i], 0) for i in 1:n] )
     end
+
     return finish(C)
 end
 
@@ -122,10 +96,12 @@ function coerce(x::WAlgElem, D::WeylAlgebra)
     cezip = zip(coefficients(unwrap(x)), exponent_vectors(unwrap(x)))
     C = Generic.MPolyBuildCtx(unwrap(D))
     M = base_ring(D)
+
     for (c, e) in cezip
         coerced_c = _coerce_unsafe(c, M, index_map)
         push_term!(C, coerced_c, [get(e, index_map[i], 0) for i in 1:n])
     end
+
     WAlgElem(D, finish(C))
 end
 
@@ -152,8 +128,6 @@ function weyl_algebra(F::Field, s::AbstractString; kw...)
 end
 weyl_algebra(s::AbstractString; kw...) = weyl_algebra(QQ, s; kw...)
 
-# TODO: constructor of n-dimensional Weyl algebra
-# TODO: make new Weyl algebra with additional variables
 function weyl_algebra(F::Field, D::WeylAlgebra, new_vars::AbstractVector{<:AbstractString}; kw...)
     old_vars = gens(D) .|> string
     if !(:new_vars_pos in keys(kw)) || kw[:new_vars_pos] == :append
@@ -167,13 +141,14 @@ function weyl_algebra(F::Field, D::WeylAlgebra, new_vars::AbstractVector{<:Abstr
     return De, g, dg
 end
 weyl_algebra(D::WeylAlgebra, s::AbstractVector{<:AbstractString}; kw...) = weyl_algebra(QQ, D, s; kw...)
-# TODO: make new Weyl algebra with a part of variables
 
 function weyl_algebra(F::Field, s::AbstractString, n::Integer)
     D = WeylAlgebra(F, [Symbol(s,i) for i = 1:n])
     return D, gens(D), dgens(D)
 end
 weyl_algebra(s::AbstractString,n::Integer) = weyl_algebra(QQ, s, n)
+
+# TODO: make new Weyl algebra with a part of variables
 
 
 ############################################################
