@@ -12,7 +12,8 @@ struct DiffOpRing{T <: MPolyRing{<:RatFuncElem}} <: AbstractDORing
     function DiffOpRing(F::Field, s::Vector{Symbol}; kw...)
         length(s) != length(unique(s)) && throw(ArgumentError("variables must be unique"))
         ds = Symbol.("d" .* string.(s))
-        R, _ = RationalFunctionField(QQ, string.(s))
+        # R, _ = RationalFunctionField(QQ, string.(s)) # !!! RationalFunctionField is deprecated !!!
+        R, _ = rational_function_field(QQ, string.(s))
         raw_D = AbstractAlgebra.polynomial_ring_only(R, ds; kw...)
         new{typeof(raw_D)}(raw_D)
     end

@@ -33,6 +33,7 @@ using AbstractAlgebra: QQ
     @test isequal(y*dx, dx*y)   # commutativity of variables and derivatives 
     @test isequal(x*(y + dy), x*y + x*dy) # distributivity of product with variables over sum
     @test isequal(dx*(x + y), dx*x + dx*y) # distributivity of product with derivatives over sum
+    @test isequal(derivative(x^2*y, x), 2*x*y) # derivative
 end
 
 @testset "DiffOpRing.jl" begin
@@ -59,6 +60,8 @@ end
     @test isequal((x+dx)//y, x//y + dx//y) # distributivity of division
     @test isequal((x+dx)*y^-1, x//y + dx//y) # distributivity of division
     @test isequal(x//x, one(D)) # reduction
+    @test isequal(derivative(x^2//y, x), 2*x//y) # derivative of numerator
+    @test isequal(derivative(x^2//y, y), -x^2//y^2) # derivative of denominator
 end
 
 @testset "Coersion" begin

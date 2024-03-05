@@ -122,6 +122,7 @@ Base.:+(x::Union{Rational, Integer}, y::T) where T <: AbstractDiffOp  = T(parent
 Base.:+(x::T, y::Union{Rational, Integer}) where T <: AbstractDiffOp = T(parent(x), unwrap(x) + y)
 Base.:-(x::Union{Rational, Integer}, y::T) where T <: AbstractDiffOp = T(parent(y), x - unwrap(y))
 Base.:-(x::T, y::Union{Rational, Integer}) where T <: AbstractDiffOp = T(parent(x), unwrap(x) - y)
+Base.:-(x::T) where T <: AbstractDiffOp = T(parent(x), -unwrap(x))
 Base.:*(x::Union{Rational, Integer}, y::T) where T <: AbstractDiffOp = T(parent(y), x * unwrap(y))
 Base.:*(x::T, y::Union{Rational, Integer}) where T <: AbstractDiffOp = T(parent(x), unwrap(x) * y)
 
@@ -197,6 +198,16 @@ function _nth_derivative(f::T, x::T ,n::Integer) where T
 
     return f
 
+end
+
+function derivative(f::T, x::T) where T <: AbstractDiffOp
+    !(isempty(dvars(f)) && isempty(dvars(x))) && error("Must not contain any differential operators")
+
+    f_coeffs = f |> unwrap |> coefficients
+    x_coeffs = x |> unwrap |> coefficients
+    x_mons = x |> unwrap |> monomials
+    diffres = derivative(f_coeffs |> first, x_coeffs |> first)*(x_mons |> first)
+    return T(parent(f), diffres)
 end
 
 function derivative(f::RatFuncElem ,x::RatFuncElem)

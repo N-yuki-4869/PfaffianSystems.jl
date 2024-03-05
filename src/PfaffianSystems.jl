@@ -28,7 +28,7 @@ include("WeylAlgebra.jl")
 export weyl_algebra, coerce, elem_type
 
 include("DiffOpRings.jl")
-export diff_op_ring, coerce, elem_type, normalform, leading_term, pfaffian_system, pfaffian_system2	
+export diff_op_ring, coerce, elem_type, normalform, leading_term, pfaffian_system, pfaffian_system2	, derivative
 
 include("DIdeals.jl")
 export DIdeal, intersection_DIdeal, stdmon
