@@ -146,6 +146,32 @@ function Base.:*(l::T, r::T) where T <: AbstractDiffOp
     return T(parent(l), ret_dop)
 end
 
+function derivative(f::T, x::T) where T <: AbstractDiffOp
+    !(isempty(dvars(f)) && isempty(dvars(x))) && error("Must not contain any differential operators")
+
+    f_coeffs = f |> unwrap |> coefficients
+
+    isempty(f_coeffs) && return zero(parent(f))
+    x_coeffs = x |> unwrap |> coefficients
+    isempty(x_coeffs) && return error("Second argument must not be a variable")
+    x_mons = x |> unwrap |> monomials
+    diffres = derivative(f_coeffs |> first, x_coeffs |> first)*(x_mons |> first)
+    return T(parent(f), diffres)
+end
+
+function derivative(f::RatFuncElem ,x::RatFuncElem)
+
+    f_nume = numerator(f)
+    f_deno = denominator(f)
+    x_nume = numerator(x)
+
+    nume = parent(x)((derivative(f_nume,x_nume)*f_deno - f_nume*derivative(f_deno,x_nume)))
+    deno = parent(x)((f_deno^2))
+
+    ret_dop = nume // deno
+    return ret_dop
+end
+
 function diff_op_pow(x::T, y::Integer) where T <: AbstractDiffOp
 	y == 0 && return one(x)
 
@@ -198,29 +224,6 @@ function _nth_derivative(f::T, x::T ,n::Integer) where T
 
     return f
 
-end
-
-function derivative(f::T, x::T) where T <: AbstractDiffOp
-    !(isempty(dvars(f)) && isempty(dvars(x))) && error("Must not contain any differential operators")
-
-    f_coeffs = f |> unwrap |> coefficients
-    x_coeffs = x |> unwrap |> coefficients
-    x_mons = x |> unwrap |> monomials
-    diffres = derivative(f_coeffs |> first, x_coeffs |> first)*(x_mons |> first)
-    return T(parent(f), diffres)
-end
-
-function derivative(f::RatFuncElem ,x::RatFuncElem)
-
-    f_nume = numerator(f)
-    f_deno = denominator(f)
-    x_nume = numerator(x)
-
-    nume = parent(x)((derivative(f_nume,x_nume)*f_deno - f_nume*derivative(f_deno,x_nume)))
-    deno = parent(x)((f_deno^2))
-
-    ret_dop = nume // deno
-    return ret_dop
 end
 
 coefficients(f::T) where T <: AbstractDiffOp = f |> unwrap |> coefficients |> collect

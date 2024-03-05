@@ -34,6 +34,7 @@ using AbstractAlgebra: QQ
     @test isequal(x*(y + dy), x*y + x*dy) # distributivity of product with variables over sum
     @test isequal(dx*(x + y), dx*x + dx*y) # distributivity of product with derivatives over sum
     @test isequal(derivative(x^2*y, x), 2*x*y) # derivative
+    @test isequal(derivative(2*one(D), x), zero(D)) # derivative of constant
 end
 
 @testset "DiffOpRing.jl" begin
